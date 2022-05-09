@@ -9,6 +9,7 @@ import pytest
 from docx.document import _Body, Document
 from docx.enum.section import WD_SECTION
 from docx.enum.text import WD_BREAK
+from docx.numbering import Numbering
 from docx.opc.coreprops import CoreProperties
 from docx.parts.document import DocumentPart
 from docx.section import Section, Sections
@@ -140,6 +141,10 @@ class DescribeDocument(object):
         _Body_.assert_called_once_with(body_elm, document)
         assert body is body_
 
+    def it_provides_access_to_its_numbering(self, numbering_fixture):
+        document, numbering_ = numbering_fixture
+        assert document.numbering is numbering_
+
     def it_determines_block_width_to_help(self, block_width_fixture):
         document, expected_value = block_width_fixture
         width = document._block_width
@@ -266,6 +271,12 @@ class DescribeDocument(object):
         body_prop_.return_value.tables = tables_
         return document, tables_
 
+    @pytest.fixture
+    def numbering_fixture(self, document_part_, numbering_):
+        document = Document(None, document_part_)
+        document_part_.numbering = numbering_
+        return document, numbering_
+
     # fixture components ---------------------------------------------
 
     @pytest.fixture
@@ -351,6 +362,10 @@ class DescribeDocument(object):
     @pytest.fixture
     def tables_(self, request):
         return instance_mock(request, list)
+
+    @pytest.fixture
+    def numbering_(self, request):
+        return instance_mock(request, Numbering)
 
 
 class Describe_Body(object):

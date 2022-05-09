@@ -10,6 +10,7 @@ from __future__ import (
 
 from ..opc.part import XmlPart
 from ..shared import lazyproperty
+from ..numbering import Numbering
 
 
 class NumberingPart(XmlPart):
@@ -32,6 +33,14 @@ class NumberingPart(XmlPart):
         definitions (<w:num> element proxies) for this numbering part.
         """
         return _NumberingDefinitions(self._element)
+
+    @property
+    def numbering(self):
+        """
+        The |Numbering| instance containing the numbering (<w:numbering> element
+        proxies) for this styles part.
+        """
+        return Numbering(self._element)
 
 
 class _NumberingDefinitions(object):

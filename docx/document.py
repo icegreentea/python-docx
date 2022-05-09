@@ -166,6 +166,13 @@ class Document(ElementProxy):
         return self._body.tables
 
     @property
+    def numbering(self):
+        """
+        A |Numbering| object providing access to the numbering in this document.
+        """
+        return self._part.numbering
+
+    @property
     def _block_width(self):
         """
         Return a |Length| object specifying the width of available "writing"

@@ -127,6 +127,14 @@ class DocumentPart(BaseStoryPart):
         return self._styles_part.styles
 
     @property
+    def numbering(self):
+        """
+        A |Numbering| object providing access to the numbering in the
+        numbering part of this document.
+        """
+        return self._numbering_part.numbering
+
+    @property
     def _settings_part(self):
         """
         A |SettingsPart| object providing access to the document-level
@@ -152,3 +160,17 @@ class DocumentPart(BaseStoryPart):
             styles_part = StylesPart.default(self.package)
             self.relate_to(styles_part, RT.STYLES)
             return styles_part
+
+    @property
+    def _numbering_part(self):
+        """
+        Instance of |NumberingPart| for this document.
+
+        TODO: Create an empty numbering part if one is not present.
+        """
+        try:
+            return self.part_related_by(RT.NUMBERING)
+        except KeyError:
+            numbering_part = NumberingPart.new()
+            self.relate_to(numbering_part, RT.NUMBERING)
+            return numbering_part

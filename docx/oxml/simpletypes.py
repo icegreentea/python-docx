@@ -407,3 +407,14 @@ class ST_VerticalAlignRun(XsdStringEnumeration):
     SUBSCRIPT = 'subscript'
 
     _members = (BASELINE, SUPERSCRIPT, SUBSCRIPT)
+
+
+class ST_MultiLevelType(XsdStringEnumeration):
+    """
+    Valid values for `w:multiLevelType/@val`.
+    """
+    SINGLE_LEVEL = 'singleLevel'
+    MULTI_LEVEL = 'multiLevel'
+    HYBRID_MULTI_LEVEL = 'hybridMultiLevel'
+
+    _members = (SINGLE_LEVEL, MULTI_LEVEL, HYBRID_MULTI_LEVEL)

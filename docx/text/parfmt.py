@@ -301,3 +301,35 @@ class ParagraphFormat(ElementProxy):
             if line == Twips(480):
                 return WD_LINE_SPACING.DOUBLE
         return lineRule
+
+    @property
+    def numbering_numId(self):
+        pPr = self._element.pPr
+        if pPr is None or pPr.numPr is None or pPr.numPr.numId is None:
+            return None
+        return pPr.numPr.numId.val
+
+    @numbering_numId.setter
+    def numbering_numId(self, numId):
+        pPr = self._element.get_or_add_pPr()
+        numPr = pPr.get_or_add_numPr()
+        _numId = numPr.get_or_add_numId()
+        _numId.val = numId
+
+    @property
+    def numbering_ilvl(self):
+        pPr = self._element.pPr
+        if pPr is None or pPr.numPr is None or pPr.numPr.ilvl is None:
+            return None
+        return pPr.numPr.ilvl.val
+
+    @numbering_ilvl.setter
+    def numbering_ilvl(self, ilvl):
+        pPr = self._element.get_or_add_pPr()
+        numPr = pPr.get_or_add_numPr()
+        _ilvl = numPr.get_or_add_ilvl()
+        _ilvl.val = ilvl
+
+    def set_numbering(self, numbering_instance, ilvl):
+        self.numbering_numId = (numbering_instance.numId)
+        self.numbering_ilvl = (ilvl)
