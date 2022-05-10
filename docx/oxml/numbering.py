@@ -322,9 +322,15 @@ class CT_Lvl(BaseOxmlElement):
     rPr = ZeroOrOne('w:rPr')
     del _tag_seq
 
-    ilvl = RequiredAttribute("ilvl", ST_DecimalNumber)
+    ilvl = RequiredAttribute("w:ilvl", ST_DecimalNumber)
     # tplc
     # tentative
+
+    @classmethod
+    def new(cls, ilvl):
+        lvl = OxmlElement('w:lvl')
+        lvl.ilvl = ilvl
+        return lvl
 
     @classmethod
     def create_bullet(cls, ilvl, tabsize_twips=360, lvlText="\u2022", indent_twips=360):

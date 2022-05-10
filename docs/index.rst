@@ -81,6 +81,8 @@ User Guide
    user/styles-understanding
    user/styles-using
    user/shapes
+   user/numbering-understanding
+   user/numbering-using
 
 
 API Documentation
@@ -99,6 +101,7 @@ API Documentation
    api/dml
    api/shared
    api/enum/index
+   api/numbering
 
 
 Contributor Guide

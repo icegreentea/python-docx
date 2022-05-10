@@ -67,6 +67,8 @@ release = __version__
 # file that is read. This is the right place to add substitutions that should
 # be available in every file.
 rst_epilog = """
+.. |AbstractNumbering| replace:: :class:`docx.numbering.AbstractNumbering`
+
 .. |api-Document| replace:: :class:`docx.api.Document`
 
 .. |AttributeError| replace:: :exc:`.AttributeError`
@@ -134,6 +136,10 @@ rst_epilog = """
 .. |Length| replace:: :class:`.Length`
 
 .. |None| replace:: :class:`.None`
+
+.. |Numbering| replace:: :class:`docx.numbering.Numbering`
+
+.. |NumberingInstance| replace:: :class:`docx.numbering.NumberingInstance`
 
 .. |NumberingPart| replace:: :class:`.NumberingPart`
 
