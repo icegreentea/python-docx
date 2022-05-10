@@ -143,3 +143,33 @@ class Paragraph(Parented):
         """
         p = self._p.add_p_before()
         return Paragraph(p, self._parent)
+
+    def set_numbering(self, numbering_instance, ilvl):
+        """
+        Set the paragraph's numbering and level.
+        """
+        self.paragraph_format.set_numbering(numbering_instance, ilvl)
+
+    @property
+    def numbering_numId(self):
+        """
+        Return numid of the assigned numbering.
+        If |None|, then no numbering is assigned.
+        """
+        return self.paragraph_format.numbering_numId
+
+    @numbering_numId.setter
+    def numbering_numId(self, value):
+        self.paragraph_format.numbering_numId = value
+
+    @property
+    def numbering_ilvl(self):
+        """
+        Return the ilvl (level) of the assigned numbering.
+        If |None|, then no numbering level is assigned.
+        """
+        return self.paragraph_format.numbering_ilvl
+
+    @numbering_ilvl.setter
+    def numbering_ilvl(self, value):
+        self.paragraph_format.numbering_ilvl = value

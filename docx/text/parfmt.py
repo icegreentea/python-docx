@@ -12,7 +12,6 @@ from ..enum.text import WD_LINE_SPACING
 from ..shared import ElementProxy, Emu, lazyproperty, Length, Pt, Twips
 from .tabstops import TabStops
 
-
 class ParagraphFormat(ElementProxy):
     """
     Provides access to paragraph formatting such as justification,
@@ -304,6 +303,10 @@ class ParagraphFormat(ElementProxy):
 
     @property
     def numbering_numId(self):
+        """
+        Return numid of the assigned numbering.
+        If |None|, then no numbering is assigned.
+        """
         pPr = self._element.pPr
         if pPr is None or pPr.numPr is None or pPr.numPr.numId is None:
             return None
@@ -318,6 +321,10 @@ class ParagraphFormat(ElementProxy):
 
     @property
     def numbering_ilvl(self):
+        """
+        Return the ilvl (level) of the assigned numbering.
+        If |None|, then no numbering level is assigned.
+        """
         pPr = self._element.pPr
         if pPr is None or pPr.numPr is None or pPr.numPr.ilvl is None:
             return None
@@ -331,5 +338,13 @@ class ParagraphFormat(ElementProxy):
         _ilvl.val = ilvl
 
     def set_numbering(self, numbering_instance, ilvl):
-        self.numbering_numId = (numbering_instance.numId)
+        """
+        Set the paragraph's numbering and level.
+        """
+        from ..numbering import NumberingInstance
+
+        if isinstance(numbering_instance, int):
+            self.numbering_numId = numbering_instance
+        elif isinstance(numbering_instance, NumberingInstance):
+            self.numbering_numId = (numbering_instance.numId)
         self.numbering_ilvl = (ilvl)

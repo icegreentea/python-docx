@@ -3,6 +3,7 @@
 """Unit test suite for the docx.text.paragraph module"""
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+from array import array
 
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -105,6 +106,14 @@ class DescribeParagraph(object):
         new_paragraph = paragraph._insert_paragraph_before()
         assert isinstance(new_paragraph, Paragraph)
         assert body.xml == expected_xml
+
+    def it_can_set_numbering(self):
+        paragraph = Paragraph(element('w:p'), None)
+        paragraph.set_numbering(5, 0)
+        expected_xml = xml('w:p/w:pPr/w:numPr/(w:ilvl{w:val=0},w:numId{w:val=5})')
+        assert expected_xml == paragraph._element.xml
+        assert 5 == paragraph.numbering_numId
+        assert 0 == paragraph.numbering_ilvl
 
     # fixtures -------------------------------------------------------
 
