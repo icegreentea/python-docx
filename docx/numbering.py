@@ -84,13 +84,13 @@ class Numbering(ElementProxy):
         """ List of all |NumberingInstance|. """
         return [NumberingInstance(e, self) for e in self._element.num_lst]
 
-    def create_bullet_abstract_numbering(self, name, tab_width_twips=360, 
+    def create_bullet_abstract_numbering(self, name, tab_width=QUARTER_INCH, 
                                          num_lvls=9, bulletTxt="\u2022"):
         """ Create and return |AbstractNumbering| defining a bullet list (unordered list).
 
         :param name: The `name` assigned to created abstract numbering.
-        :param tab_width_twips: Sets indent tab width, and hanging indent width. 
-            Units are twips (1440 of an inch). Default to 360 (0.25 inch).
+        :param tab_width: Sets indent tab width, and hanging indent width. 
+            Defaults to quarter inch. 
         :param num_lvls: Number of indentation levels to create. Defaults to 9.
         :param bulletTxt: Symbol to use for bullet. Default to `\u2022` (unicode bullet)
 
@@ -100,16 +100,13 @@ class Numbering(ElementProxy):
         The created abstract numbering will use a number format (`numFmt`) of "bullet".
         """
         new_abstract_numbering = self._element.add_abstract_num(name=name)
-        levels = [CT_Lvl.create_bullet(i,
-            tabsize_twips=tab_width_twips,
-            indent_twips=tab_width_twips,
-            lvlText=bulletTxt
-        ) for i in range(0, num_lvls)]
-        for level in levels:
-            new_abstract_numbering._insert_levels(level)
-        return AbstractNumbering(new_abstract_numbering)
+        ab_num = AbstractNumbering(new_abstract_numbering)
+        for i in range(0, num_lvls):
+            ab_num.create_bullet_level(i, indent_step_size=tab_width,
+                first_line_indent=-tab_width, lvlText=bulletTxt)
+        return ab_num
 
-    def create_decimal_abstract_numbering(self, name, tab_width_twips=360, num_lvls=9):
+    def create_decimal_abstract_numbering(self, name, tab_width=QUARTER_INCH, num_lvls=9):
         """
         Create and return |AbstactNumbering| defining a decimal list (ordered list).
 
@@ -117,16 +114,22 @@ class Numbering(ElementProxy):
         See func
         """
         new_abstract_numbering = self._element.add_abstract_num(name=name)
-        levels = [CT_Lvl.create_decimal(i) for i in range(0, num_lvls)]
-        for level in levels:
-            new_abstract_numbering._insert_levels(level)
-        return AbstractNumbering(new_abstract_numbering)
+        ab_num = AbstractNumbering(new_abstract_numbering)
+        for i in range(0, num_lvls):
+            ab_num.create_decimal_level(i, indent_step_size=tab_width,
+                first_line_indent=-tab_width)
+        return ab_num
+
 
     def create_abstract_numbering(self, name):
+        """ Create and return a new |AbstractNumbering| with ``name``.
+        """
         new_abstract_numbering = self._element.add_abstract_num(name=name)
         return AbstractNumbering(new_abstract_numbering)
 
     def create_numbering_instance(self, abstract_num):
+        """ Create and return a new |NumberingInstance| connected to ``abstract_num``.
+        """
         if isinstance(abstract_num, str):
             _elem = self._element.get_abstract_num_by_name(abstract_num)
             return NumberingInstance(self._element.add_num(_elem.abstractNumId), parent=self)
@@ -145,10 +148,12 @@ class AbstractNumbering(ElementProxy):
 
     @property
     def abstract_num_id(self):
+        """ Unique ID - `w:abstractNum/@w:abstractNumId`. """
         return self._element.abstractNumId
 
     @property
     def name(self):
+        """ (Optional) name - `w:abstractNum/w:Name`. """
         return self._element.name.val
 
     @property
@@ -160,7 +165,7 @@ class AbstractNumbering(ElementProxy):
     def get_or_add_level(self, ilvl):
         """ Creates or gets |AbstractNumberingLevel| at ``ilvl``.
         """
-        _matches = [x.ilvl == ilvl for x in self.levels]
+        _matches = [x for x in self.levels if x.ilvl == ilvl]
         if len(_matches) == 0:
             new_level = self._element.add_levels()
             new_level.ilvl = ilvl
@@ -170,6 +175,15 @@ class AbstractNumbering(ElementProxy):
 
     def create_bullet_level(self, ilvl, indent_step_size=QUARTER_INCH,
                             first_line_indent=-QUARTER_INCH, lvlText="\u2022"):
+        """ Create a |AbstractNumberingLevel| suitable for unordered list.
+
+        :param ilvl: The ``w:ilvl`` to set the level to.
+        :param indent_step_size: The tab/indent tab width to use. Default quarter inch.
+        :param first_line_indent: The first line indent to use. Default quarter inch.
+        :param lvlText: The bullet to use. Default is \u2022.
+
+        :returns: The created |AbstractNumberingLevel|        
+        """
         lvl = self.get_or_add_level(ilvl)
         
         lvl.numFmt = "bullet"
@@ -180,6 +194,16 @@ class AbstractNumbering(ElementProxy):
 
     def create_decimal_level(self, ilvl, indent_step_size=QUARTER_INCH,
                             first_line_indent=-QUARTER_INCH, lvlText=None):
+        """ Create a |AbstractNumberingLevel| suitable for ordered list.
+
+        :param ilvl: The ``w:ilvl`` to set the level to.
+        :param indent_step_size: The tab/indent tab width to use. Default quarter inch.
+        :param first_line_indent: The first line indent to use. Default quarter inch.
+        :param lvlText: The bullet to use. Default is |None| which maps to single
+            level numbering.
+
+        :returns: The created |AbstractNumberingLevel|        
+        """
         if lvlText is None:
             lvlText = "%" + "%s." % (ilvl+1)
         lvl = self.get_or_add_level(ilvl)
@@ -238,7 +262,7 @@ class AbstractNumberingLevel(ElementProxy):
         
         Wrapper around ``<w:lvlRestart>``. Sets when this level will restart 
         it's counter. 1 indexed. Whenever a level of `lvlRestart` (or higher) is 
-        encountered, the counter will restart. Setting to 0 will cause this level 
+    encountered, the counter will restart. Setting to 0 will cause this level 
         to never reset.
 
         A value of |None| means that no value has been set and a OOXML 
@@ -252,7 +276,7 @@ class AbstractNumberingLevel(ElementProxy):
     @lvlRestart.setter
     def lvlRestart(self, value):
         _lvlRestart = self._element.get_or_add_lvlRestart()
-        _lvlRestart[_VAL_KEY] = value
+        _lvlRestart.val = value
 
     @property
     def lvlText(self): 
@@ -380,18 +404,27 @@ class AbstractNumberingLevel(ElementProxy):
         self.pPr.first_line_indent = value
 
 class NumberingInstance(ElementProxy):
-    
+    """
+    Wrapper around ``<w:num>``. Concrete numbering implementation of an 
+    abstract numbering defintion (as represented by |AbstractNumbering|).
+    Paragraph styles (|ParagraphFormat|) gain numbering style by referencing
+    ``numId`` of specific numbering instances.
 
+    Numbering instaces may override the underlying |AbstractNumbering| by
+    setting ``ilvl_overrides``. These overrides occur on a per level basis.
+    """
     @property
     def ilvl_overrides(self):
         pass
 
     @property
     def numId(self):
+        """ `w:num\@w:numId`. Used as unique identifier for numbering instance"""
         return self._element.numId
 
     @property
     def abstract_num_id(self):
+        """ The ``w:abstractNumId`` of the base |AbstractNumbering|. """
         return self._element.abstractNumId.val
 
     @abstract_num_id.setter
@@ -400,6 +433,7 @@ class NumberingInstance(ElementProxy):
 
     @property
     def abstract_num(self):
+        """ Helper reference to base |AbstractNumbering|. """
         return self._parent.get_abstract_numbering_by_id(self.abstract_num_id)
 
     @abstract_num.setter

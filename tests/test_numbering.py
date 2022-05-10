@@ -133,7 +133,7 @@ class DescribeNumbering(object):
     def it_can_create_bullet_definition(self, empty_numberings_fixture):
         numbering = Numbering(element(empty_numberings_fixture))
         abs_num = numbering.create_bullet_abstract_numbering(
-                "bullet-list", tab_width_twips=360)
+                "bullet-list", tab_width=Inches(0.25))
 
         assert 9 == len(abs_num.levels)
         for i, lvl in enumerate(abs_num.levels):
@@ -145,7 +145,7 @@ class DescribeNumbering(object):
     def it_can_create_decimal_definition(self, empty_numberings_fixture):
         numbering = Numbering(element(empty_numberings_fixture))
         abs_num = numbering.create_decimal_abstract_numbering(
-                "decimal-list", tab_width_twips=360)
+                "decimal-list", tab_width=Inches(0.25))
 
         assert 9 == len(abs_num.levels)
         for i, lvl in enumerate(abs_num.levels):
@@ -269,10 +269,37 @@ class DescribeAbstractNumberingLevel(object):
         assert lvl.lvlRestart is None
         assert lvl.lvlText is None
         assert isinstance(lvl.pPr, ParagraphFormat)
-
+        assert lvl.left_indent is None
+        assert lvl.right_indent is None
+        assert lvl.first_line_indent is None
 
     def it_provides_setters_to_empty_attributes(self, empty_lvl):
-        pass
+        tmpl, expected_ilvl = empty_lvl
+        lvl = AbstractNumberingLevel(element(tmpl))
+        lvl.start = 1
+        lvl.numFmt = "decimal"
+        lvl.lvlRestart = 2
+        lvl.lvlText = "%1.%2."
+        lvl.left_indent = Inches(0.25)
+        lvl.right_indent = Inches(0.5)
+        lvl.first_line_indent = -Inches(0.25)
+        expected_tmpl = """
+            w:lvl{w:ilvl=%s}/(
+                w:start{w:val=1},
+                w:numFmt{w:val=decimal},
+                w:lvlRestart{w:val=2},
+                w:lvlText{w:val=%%1.%%2.},
+                w:pPr/w:ind{w:left=%s,w:right=%s,w:hanging=%s}
+            )
+        """ % (expected_ilvl, Inches(0.25).twips, Inches(0.50).twips, Inches(0.25).twips)
+        expected_xml = xml(expected_tmpl)
+        assert expected_xml == lvl._element.xml
+
+    def it_provides_paragraph_access(self, empty_lvl):
+        tmpl, expected_ilvl = empty_lvl
+        lvl = AbstractNumberingLevel(element(tmpl))
+        lvl.pPr.left_indent = Inches(0.25)
+        assert lvl.left_indent == Inches(0.25)
 
 
     @pytest.fixture
@@ -281,20 +308,6 @@ class DescribeAbstractNumberingLevel(object):
             w:lvl{w:ilvl=0}
         """
         return tmpl, 0
-
-    @pytest.fixture
-    def defined_lvl(self):
-        tmpl = """
-            w:lvl{w:ilvl=1}/(
-                w:start{w:val=2},
-                w:numFmt{w:val=deciaml},
-                w:lvlRestart{w:val=0},
-                w:lvlText{w:val=%1.},
-                w:pPr/(
-                    w:ind 
-                )
-            )
-        """
 
 class DescribeNumberingInstance(object):
     def it_provides_numId(self, simple_numbering_fixture):

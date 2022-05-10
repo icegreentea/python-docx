@@ -289,6 +289,10 @@ class CT_AbstractNum(BaseOxmlElement):
         return ab_num
 
 
+class CT_LvlRestart(BaseOxmlElement):
+    val = RequiredAttribute("w:val", ST_DecimalNumber)
+
+
 class CT_Lvl(BaseOxmlElement):
     """
     ``<w:lvl>`` element. Defines the appearance of a single level
