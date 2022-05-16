@@ -4,13 +4,10 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from re import L
-from _pytest.assertion import AssertionState
-from _pytest.compat import num_mock_patch_args
 
 import pytest
 
 from docx.numbering import Numbering, AbstractNumbering, AbstractNumberingLevel, NumberingInstance
-from docx.oxml import numbering
 from docx.shared import Twips, Inches
 from docx.text.parfmt import ParagraphFormat
 
@@ -43,6 +40,69 @@ class DescribeNumbering(object):
         assert 0 == len(numbering.numbering_instances)
         expected_xml = xml(simple_no_instance_fixture)
         assert expected_xml == numbering._element.xml
+
+    def it_can_remove_specific_numbering_instance_by_id(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 4 == len(numbering.numbering_instances)
+        numbering.remove_numbering_instance(1)
+        assert 3 == len(numbering.numbering_instances)
+        assert numbering.get_numbering_instance_by_id(1) is None
+
+    def it_can_remove_specific_numbering_instance(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 4 == len(numbering.numbering_instances)
+        num_ist = numbering.get_numbering_instance_by_id(1)
+        numbering.remove_numbering_instance(num_ist)
+        assert 3 == len(numbering.numbering_instances)
+        assert numbering.get_numbering_instance_by_id(1) is None
+
+    def it_raises_not_implemented_on_remove_numbering_propagation(self, 
+                                                                  simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        with pytest.raises(NotImplementedError):
+            numbering.remove_numbering_instance(1, remove_document_refs=True)
+
+
+    def it_can_remove_specific_abstract_numbering_by_id(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 3 == len(numbering.abstract_numberings)
+        ab_num = numbering.get_abstract_numbering_by_id(1)
+        assert ab_num is not None
+        numbering.remove_abstract_numbering(ab_num.abstract_num_id)
+        assert 2 == len(numbering.abstract_numberings)
+        assert numbering.get_abstract_numbering_by_id(1) is None
+
+    def it_can_remove_specific_abstract_numbering_by_name(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 3 == len(numbering.abstract_numberings)
+        ab_num = numbering.get_abstract_numbering_by_id(1)
+        assert ab_num is not None
+        numbering.remove_abstract_numbering(ab_num.name)
+        assert 2 == len(numbering.abstract_numberings)
+        assert numbering.get_abstract_numbering_by_id(1) is None
+
+    def it_can_remove_specific_abstract_numbering_by_instance(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 3 == len(numbering.abstract_numberings)
+        ab_num = numbering.get_abstract_numbering_by_id(1)
+        assert ab_num is not None
+        numbering.remove_abstract_numbering(ab_num)
+        assert 2 == len(numbering.abstract_numberings)
+        assert numbering.get_abstract_numbering_by_id(1) is None
+
+    def it_can_propagate_removing_specific_abstract_numbering_to_numbering_instances(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        assert 3 == len(numbering.abstract_numberings)
+        ab_num = numbering.get_abstract_numbering_by_id(1)
+        assert ab_num is not None
+        numbering.remove_abstract_numbering(ab_num, remove_numbering_instances=True)
+        assert 2 == len(numbering.abstract_numberings)
+        assert 3 == len(numbering.numbering_instances)
+
+    def it_raises_not_implemented_on_remove_abstract_numbering_to_references(self, simple_numbering_fixture):
+        numbering = Numbering(element(simple_numbering_fixture))
+        with pytest.raises(NotImplementedError):
+            numbering.remove_abstract_numbering(1, remove_document_refs=True)
 
     def it_provides_abstract_numbering_by_id(self, simple_numbering_fixture):
         numbering = Numbering(element(simple_numbering_fixture))
@@ -268,10 +328,15 @@ class DescribeAbstractNumberingLevel(object):
         assert lvl.numFmt is None
         assert lvl.lvlRestart is None
         assert lvl.lvlText is None
-        assert isinstance(lvl.pPr, ParagraphFormat)
+        assert isinstance(lvl.paragraph_format, ParagraphFormat)
+        assert lvl.run_format is None
         assert lvl.left_indent is None
         assert lvl.right_indent is None
         assert lvl.first_line_indent is None
+        assert lvl.paragraph_style is None
+        assert lvl.is_legal == False
+        assert lvl.suffix is None
+        assert lvl.justification is None
 
     def it_provides_setters_to_empty_attributes(self, empty_lvl):
         tmpl, expected_ilvl = empty_lvl
@@ -283,11 +348,13 @@ class DescribeAbstractNumberingLevel(object):
         lvl.left_indent = Inches(0.25)
         lvl.right_indent = Inches(0.5)
         lvl.first_line_indent = -Inches(0.25)
+        lvl.paragraph_style = "Heading-1"
         expected_tmpl = """
             w:lvl{w:ilvl=%s}/(
                 w:start{w:val=1},
                 w:numFmt{w:val=decimal},
                 w:lvlRestart{w:val=2},
+                w:pStyle{w:val=Heading-1},
                 w:lvlText{w:val=%%1.%%2.},
                 w:pPr/w:ind{w:left=%s,w:right=%s,w:hanging=%s}
             )
@@ -298,8 +365,36 @@ class DescribeAbstractNumberingLevel(object):
     def it_provides_paragraph_access(self, empty_lvl):
         tmpl, expected_ilvl = empty_lvl
         lvl = AbstractNumberingLevel(element(tmpl))
-        lvl.pPr.left_indent = Inches(0.25)
+        lvl.paragraph_format.left_indent = Inches(0.25)
         assert lvl.left_indent == Inches(0.25)
+
+    def it_provides_is_legal_toggle(self, empty_lvl):
+        tmpl, expected_ilvl = empty_lvl
+        lvl = AbstractNumberingLevel(element(tmpl))
+        lvl.is_legal = True
+        expected_xml = xml("""
+            w:lvl{w:ilvl=0}/w:isLgl
+        """)
+        assert expected_xml == lvl._element.xml
+        lvl.is_legal = False
+        assert xml(tmpl) == lvl._element.xml
+
+    def it_provides_suffix_setter_exceptions(self, empty_lvl):
+        tmpl, expected_ilvl = empty_lvl
+        lvl = AbstractNumberingLevel(element(tmpl))
+        with pytest.raises(ValueError):
+            lvl.suffix = "spaces"
+        with pytest.raises(ValueError):
+            lvl.suffix = ""
+        
+
+    def it_provides_suffix_setter(self, empty_lvl, suffix_fixture):
+        tmpl, expected_ilvl = empty_lvl
+        expected_xml, suffix_value = suffix_fixture
+        lvl = AbstractNumberingLevel(element(tmpl))
+        lvl.suffix = suffix_value
+        assert expected_xml == lvl._element.xml
+
 
 
     @pytest.fixture
@@ -308,6 +403,17 @@ class DescribeAbstractNumberingLevel(object):
             w:lvl{w:ilvl=0}
         """
         return tmpl, 0
+
+    @pytest.fixture(params=[
+        ("w:lvl{w:ilvl=0}/w:suff{w:val=tab}", "tab"),
+        ("w:lvl{w:ilvl=0}/w:suff{w:val=space}", "space"),
+        ("w:lvl{w:ilvl=0}/w:suff{w:val=nothing}", "nothing"),
+        ("w:lvl{w:ilvl=0}", None),
+    ])
+    def suffix_fixture(self, request):
+        expected_xml, suff_val = request.param
+        return xml(expected_xml), suff_val
+
 
 class DescribeNumberingInstance(object):
     def it_provides_numId(self, simple_numbering_fixture):

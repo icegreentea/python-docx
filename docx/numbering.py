@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import re
+from typing import Type
 
 from docx.shared import ElementProxy, Inches
 from docx.text.parfmt import ParagraphFormat
@@ -27,6 +28,47 @@ class Numbering(ElementProxy):
     def clear_numbering_instances(self):
         """ Delete all |NumberingInstance|."""
         self._element.remove_all("w:num")
+
+    def remove_abstract_numbering(self, abstract_num, 
+                                  remove_numbering_instances=False,
+                                  remove_document_refs=False):
+        if isinstance(abstract_num, int):
+            ab_num = self.get_abstract_numbering_by_id(abstract_num)
+            self.remove_abstract_numbering(ab_num, remove_numbering_instances, 
+                                           remove_document_refs)
+        elif isinstance(abstract_num, str):
+            ab_num = self.get_abstract_numbering_by_name(abstract_num)
+            self.remove_abstract_numbering(ab_num, remove_numbering_instances, 
+                                           remove_document_refs)
+        elif isinstance(abstract_num, AbstractNumbering):
+            if remove_document_refs == True:
+                raise NotImplementedError("Propgating to all document references is not implemented!")    
+            if remove_numbering_instances == True:
+                num_insts = self.get_numbering_instance_by_abstract_numbering(abstract_num)
+                if num_insts is not None:
+                    for num_inst  in num_insts:
+                        self.remove_numbering_instance(num_inst)
+            elem = abstract_num._element
+            elem.getparent().remove(elem)
+            abstract_num._element = None
+        else:
+            raise TypeError
+
+    def remove_numbering_instance(self, num, remove_document_refs=False):
+        if remove_document_refs == True:
+            raise NotImplementedError("Propgating references is not implemented!")
+        if isinstance(num, int):
+            #self._element.remove_all("w:num[w:numId=%s" % num)
+            num_inst = self.get_numbering_instance_by_id(num)
+            self.remove_numbering_instance(num_inst)
+        elif isinstance(num, NumberingInstance):
+            #self._element.remove_all("w:num[w:numId=%s" % num)
+            num_elem = num._element
+            num_elem.getparent().remove(num_elem)
+            num._element = None
+            #num_elem._element = None
+        else: 
+            raise TypeError
 
     def get_abstract_numbering_by_id(self, abstract_num_id):
         """ Get |AbstractNumbering| by it's id.
@@ -56,7 +98,7 @@ class Numbering(ElementProxy):
             return NumberingInstance(elem, self)
 
     def get_numbering_instance_by_abstract_numbering(self, abstract_num):
-        """ Get |NumberingInstance|s that match a given |AbstractNumbering|.
+        """ Get |NumberingInstance| (s) that match a given |AbstractNumbering|.
 
         *abstract_num* can be an int (interpreted as abstract_num_id), string 
         (interpreted as name) or instance of |AbstractNumbering|.
@@ -108,7 +150,7 @@ class Numbering(ElementProxy):
 
     def create_decimal_abstract_numbering(self, name, tab_width=QUARTER_INCH, num_lvls=9):
         """
-        Create and return |AbstactNumbering| defining a decimal list (ordered list).
+        Create and return |AbstractNumbering| defining a decimal list (ordered list).
 
         The created abstract numbering will have name of `name`.
         See func
@@ -129,6 +171,12 @@ class Numbering(ElementProxy):
 
     def create_numbering_instance(self, abstract_num):
         """ Create and return a new |NumberingInstance| connected to ``abstract_num``.
+
+        :params abstract_num: The abstract numbering to reference. If str, will
+            be interpeted as abstract numbering name. If int, will interpret as 
+            abstract numbering id. Or can be |AbstractNumbering|.
+
+        :returns |NumberingInstance|: The new numbering created.
         """
         if isinstance(abstract_num, str):
             _elem = self._element.get_abstract_num_by_name(abstract_num)
@@ -262,7 +310,7 @@ class AbstractNumberingLevel(ElementProxy):
         
         Wrapper around ``<w:lvlRestart>``. Sets when this level will restart 
         it's counter. 1 indexed. Whenever a level of `lvlRestart` (or higher) is 
-    encountered, the counter will restart. Setting to 0 will cause this level 
+        encountered, the counter will restart. Setting to 0 will cause this level 
         to never reset.
 
         A value of |None| means that no value has been set and a OOXML 
@@ -277,6 +325,74 @@ class AbstractNumberingLevel(ElementProxy):
     def lvlRestart(self, value):
         _lvlRestart = self._element.get_or_add_lvlRestart()
         _lvlRestart.val = value
+
+    @property
+    def paragraph_style(self):
+        """
+        Name of |_ParagraphStyle| set as `pStyle`. 
+        |None| indicates no value has been set.
+        Named paragraph style will automatically bind to this numbering level (ilvl),
+        BUT NOT to the number id - the paragraph still needs to set ``numId`` to
+        reference a concrete numbering instances.
+        """
+        if self._element.pStyle is None:
+            return None
+        return self._element.pStyle[_VAL_KEY]
+
+    @paragraph_style.setter
+    def paragraph_style(self, value):
+        _pStyle = self._element.get_or_add_pStyle()
+        if isinstance(value, str):
+            print("ping")
+            _pStyle.attrib[_VAL_KEY] = value
+        else:
+            from .styles.style import _ParagraphStyle
+            if isinstance(str, _ParagraphStyle):
+                _pStyle.attrib[_VAL_KEY] = _ParagraphStyle.name
+            else:
+                raise TypeError
+
+    @property
+    def is_legal(self):
+        """
+        Is "legal" numbering format (show all decimals at all numbering levels)
+        enabled? 
+        """
+        if self._element.isLgl is None:
+            return False
+        return True
+
+    @is_legal.setter
+    def is_legal(self, value):
+        if value:
+            self._element.get_or_add_isLgl()
+        else:
+            self._element._remove_isLgl()
+
+
+    @property
+    def suffix(self):
+        """
+        Returns the content between numbering symbol and paragraph text.
+        If |None|, it means no value is set, and OOXML specification default
+        of "tab" is assumed.
+
+        Otherwise must be one of "tab", "space" or "nothing"
+        """
+        if self._element.suff is None:
+            return None
+        return self._element.suff[_VAL_KEY]
+
+    @suffix.setter
+    def suffix(self, value):
+        if value is None:
+            self.element._remove_suff()
+        else:
+            value = value.lower()
+            if value not in ("tab", "space", "nothing"):
+                raise ValueError("Suffix must be one of `tab`, `space` or `nothing`")
+            _suff = self._element.get_or_add_suff()
+            _suff.attrib[_VAL_KEY] = value
 
     @property
     def lvlText(self): 
@@ -327,6 +443,47 @@ class AbstractNumberingLevel(ElementProxy):
         _lvlTxt.attrib[_VAL_KEY] = value
 
     @property
+    def justification(self):
+        if self._element.lvlJc is None:
+            return None
+        return self._element.lvlJc.val
+
+    @justification.setter
+    def justification(self, value):
+        if value is None:
+            self._element._remove_lvlJc()
+        else:
+            self._element.lvlJc.val = value
+
+
+    @property
+    def paragraph_format(self):
+        """ |ParagraphFormat|. Numbering Level Associated Paragraph Properties.
+        
+        Wrapper around ``<w:pPr>``. 
+        Defines the paragraph properties associated with this numbering level.
+        Paragraph properties set on the actual paragraph will override properties
+        set here.
+
+        Tabs (indentation) is defined within here.
+        """
+        pPr = self._element.get_or_add_pPr()
+        return ParagraphFormat(self._element, self)
+
+    @property
+    def run_format(self):
+        """ 
+        Creates or gets Numerbing Symbol Run properties.
+
+        Creates or gets instance of :class:`docx.oxml.text.font.CT_RPr`. This
+        sets the styling of the numbering level text when applied. For example,
+        you can use this to set the font size of the numbering component to a 
+        specific value.
+        """
+        rPr = self._element.get_or_add_rPr()
+        return rPr
+
+    @property
     def ilvl(self): 
         """ Numbering Level Reference.
 
@@ -341,20 +498,6 @@ class AbstractNumberingLevel(ElementProxy):
         self._element.ilvl = value
 
     @property
-    def pPr(self):
-        """ |ParagraphFormat|. Numbering Level Associated Paragraph Properties.
-        
-        Wrapper around ``<w:pPr>``. 
-        Defines the paragraph properties associated with this numbering level.
-        Paragraph properties set on the actual paragraph will override properties
-        set here.
-
-        Tabs (indentation) is defined within here.
-        """
-        pPr = self._element.get_or_add_pPr()
-        return ParagraphFormat(self._element, self)
-
-    @property
     def left_indent(self):
         """
         |Length| value specifying the space between the left margin and the
@@ -364,11 +507,11 @@ class AbstractNumberingLevel(ElementProxy):
 
         Wrapper around inner |ParagraphFormat| object's property.
         """
-        return self.pPr.left_indent
+        return self.paragraph_format.left_indent
 
     @left_indent.setter
     def left_indent(self, value):
-        self.pPr.left_indent = value
+        self.paragraph_format.left_indent = value
     
     @property
     def right_indent(self):
@@ -380,11 +523,11 @@ class AbstractNumberingLevel(ElementProxy):
 
         Wrapper around inner |ParagraphFormat| object's property.
         """
-        return self.pPr.right_indent
+        return self.paragraph_format.right_indent
 
     @right_indent.setter
     def right_indent(self, value):
-        self.pPr.right_indent = value
+        self.paragraph_format.right_indent = value
 
     @property
     def first_line_indent(self):
@@ -397,11 +540,16 @@ class AbstractNumberingLevel(ElementProxy):
 
         Wrapper around inner |ParagraphFormat| object's property.
         """
-        return self.pPr.first_line_indent
+        return self.paragraph_format.first_line_indent
 
     @first_line_indent.setter
     def first_line_indent(self, value):
-        self.pPr.first_line_indent = value
+        self.paragraph_format.first_line_indent = value
+
+    
+
+        
+
 
 class NumberingInstance(ElementProxy):
     """
@@ -419,7 +567,7 @@ class NumberingInstance(ElementProxy):
 
     @property
     def numId(self):
-        """ `w:num\@w:numId`. Used as unique identifier for numbering instance"""
+        """ `w:num/@w:numId`. Used as unique identifier for numbering instance"""
         return self._element.numId
 
     @property

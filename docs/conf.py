@@ -69,6 +69,8 @@ release = __version__
 rst_epilog = """
 .. |AbstractNumbering| replace:: :class:`docx.numbering.AbstractNumbering`
 
+.. |AbstractNumberingLevel| replace:: :class:`docx.numbering.AbstractNumberingLevel`
+
 .. |api-Document| replace:: :class:`docx.api.Document`
 
 .. |AttributeError| replace:: :exc:`.AttributeError`
