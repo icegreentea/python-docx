@@ -10,6 +10,7 @@ import pytest
 from docx.numbering import Numbering, AbstractNumbering, AbstractNumberingLevel, NumberingInstance
 from docx.shared import Twips, Inches
 from docx.text.parfmt import ParagraphFormat
+from docx.oxml.text.font import CT_RPr
 
 from .unitutil.cxml import element, xml
 
@@ -329,7 +330,7 @@ class DescribeAbstractNumberingLevel(object):
         assert lvl.lvlRestart is None
         assert lvl.lvlText is None
         assert isinstance(lvl.paragraph_format, ParagraphFormat)
-        assert lvl.run_format is None
+        assert isinstance(lvl._run_format, CT_RPr) 
         assert lvl.left_indent is None
         assert lvl.right_indent is None
         assert lvl.first_line_indent is None

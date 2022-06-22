@@ -471,14 +471,19 @@ class AbstractNumberingLevel(ElementProxy):
         return ParagraphFormat(self._element, self)
 
     @property
-    def run_format(self):
+    def _run_format(self):
         """ 
-        Creates or gets Numerbing Symbol Run properties.
+        Creates or gets Numbering Symbol Run properties.
 
         Creates or gets instance of :class:`docx.oxml.text.font.CT_RPr`. This
         sets the styling of the numbering level text when applied. For example,
         you can use this to set the font size of the numbering component to a 
         specific value.
+
+        Returns a low level wrapper of the symbol run properties.
+         
+        TODO: Enhance with a version that returns a high level proxy wrapper 
+        around ``<w:rPr>``.
         """
         rPr = self._element.get_or_add_rPr()
         return rPr
