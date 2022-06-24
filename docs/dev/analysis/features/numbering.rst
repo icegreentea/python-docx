@@ -15,6 +15,9 @@ to some programming languages use of abstract classes, where a concrete implemen
 must be created to be actually used, even if the abstract itself defines all of the
 functionality.
 
+More pragmatically, use of new numbering instances are used to restart numberings in
+ordered lists. 
+
 Note that the default numbering schemes in a word processor are actually stored in
 the editor, and saved into the document as needed. Unlike styles, there is not any
 concept of latent numbering.

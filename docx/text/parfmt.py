@@ -306,6 +306,8 @@ class ParagraphFormat(ElementProxy):
         """
         Return numid of the assigned numbering.
         If |None|, then no numbering is assigned.
+
+        Represents ``<w:numId>``  in ``<w:numPr>`` in ``<w:pPr>``.
         """
         pPr = self._element.pPr
         if pPr is None or pPr.numPr is None or pPr.numPr.numId is None:
@@ -324,6 +326,8 @@ class ParagraphFormat(ElementProxy):
         """
         Return the ilvl (level) of the assigned numbering.
         If |None|, then no numbering level is assigned.
+
+        Represents ``<w:ilvl>``  in ``<w:numPr>`` in ``<w:pPr>``.
         """
         pPr = self._element.pPr
         if pPr is None or pPr.numPr is None or pPr.numPr.ilvl is None:

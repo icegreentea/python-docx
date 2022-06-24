@@ -15,7 +15,7 @@ from docx.oxml.numbering import CT_Lvl
 _VAL_KEY = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val"
 
 class Numbering(ElementProxy):
-    """Wrapper around numbering part/element.
+    """Wrapper around numbering part/element of a document.
 
     Defines the numbering definitions used in a document.
     Not intended to be constructed directly. Should be retrieved from
@@ -32,6 +32,14 @@ class Numbering(ElementProxy):
     def remove_abstract_numbering(self, abstract_num, 
                                   remove_numbering_instances=False,
                                   remove_document_refs=False):
+        """ Remove specific |AbstractNumbering| definition identified by *abstract_num*.
+
+        *abstract_num* can be a |AbstractNumbering| instance, an integer (representing the
+        abstract numbering id), or a string (representing the abstract numbering name).
+
+        If *remove_numbering_instances* is True, then all |NumberingInstance|s referencing
+        the targetted abstract numbering will also be removed.
+        """
         if isinstance(abstract_num, int):
             ab_num = self.get_abstract_numbering_by_id(abstract_num)
             self.remove_abstract_numbering(ab_num, remove_numbering_instances, 
@@ -55,6 +63,11 @@ class Numbering(ElementProxy):
             raise TypeError
 
     def remove_numbering_instance(self, num, remove_document_refs=False):
+        """ Remove specific |NumberingInstance| identified by *num*.
+
+        *num* can be an |NumberingInstance|, an integer (representing the *numId* 
+        attribute).
+        """
         if remove_document_refs == True:
             raise NotImplementedError("Propgating references is not implemented!")
         if isinstance(num, int):
@@ -550,10 +563,6 @@ class AbstractNumberingLevel(ElementProxy):
     @first_line_indent.setter
     def first_line_indent(self, value):
         self.paragraph_format.first_line_indent = value
-
-    
-
-        
 
 
 class NumberingInstance(ElementProxy):
