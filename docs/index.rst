@@ -108,3 +108,5 @@ Contributor Guide
    :maxdepth: 1
 
    dev/analysis/index
+   dev/xmlchemy
+   dev/cxml

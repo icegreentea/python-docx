@@ -1,4 +1,3 @@
-
 Understanding ``xmlchemy``
 ==========================
 

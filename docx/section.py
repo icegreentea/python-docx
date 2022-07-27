@@ -221,6 +221,10 @@ class Section(object):
         self._sectPr.page_width = value
 
     @property
+    def paragraphs(self):
+        pass
+
+    @property
     def right_margin(self):
         """
         |Length| object representing the right margin for all pages in this

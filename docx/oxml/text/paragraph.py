@@ -4,6 +4,7 @@
 Custom element classes related to paragraphs (CT_P).
 """
 
+import re
 from ..ns import qn
 from ..xmlchemy import BaseOxmlElement, OxmlElement, ZeroOrMore, ZeroOrOne
 
@@ -55,11 +56,25 @@ class CT_P(BaseOxmlElement):
     def set_sectPr(self, sectPr):
         """
         Unconditionally replace or add *sectPr* as a grandchild in the
-        correct sequence.
+        correct sequence. If *sectPr* is None, will remove the grandchild
+        if present.
         """
         pPr = self.get_or_add_pPr()
         pPr._remove_sectPr()
-        pPr._insert_sectPr(sectPr)
+        if sectPr is None:
+            return
+        else:
+            pPr._insert_sectPr(sectPr)
+
+    def get_sectPr(self):
+        """
+        Returns ``<w:sectPr>>`` child element. |None| if ``<w:pPr>`` is unset, 
+        or if ``<w:sectPr>>`` is not present.
+        """
+        pPr = self.pPr
+        if pPr is None:
+            return None
+        return pPr.sectPr
 
     @property
     def style(self):

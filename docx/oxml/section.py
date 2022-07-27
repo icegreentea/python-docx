@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from docx.enum.section import WD_HEADER_FOOTER, WD_ORIENTATION, WD_SECTION_START
 from docx.oxml.simpletypes import ST_SignedTwipsMeasure, ST_TwipsMeasure, XsdString
+from docx.oxml.document import CT_Body
 from docx.oxml.xmlchemy import (
     BaseOxmlElement,
     OptionalAttribute,
@@ -186,6 +187,10 @@ class CT_SectPr(BaseOxmlElement):
     def header(self, value):
         pgMar = self.get_or_add_pgMar()
         pgMar.header = value
+
+    @property
+    def is_final_section(self):
+        return isinstance(self.getparent(), CT_Body)
 
     @property
     def left_margin(self):
