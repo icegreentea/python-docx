@@ -27,7 +27,7 @@ class Sections(Sequence):
                 Section(sectPr, self._document_part)
                 for sectPr in self._document_elm.sectPr_lst[key]
             ]
-        return Section(self._document_elm.sectPr_lst[key], self._document_part)
+        return Section(self._document_elm.sectPr_lst[key], self._document_part, self)
 
     def __iter__(self):
         for sectPr in self._document_elm.sectPr_lst:
@@ -43,10 +43,11 @@ class Section(object):
     Also provides access to headers and footers.
     """
 
-    def __init__(self, sectPr, document_part):
+    def __init__(self, sectPr, document_part, sections=None):
         super(Section, self).__init__()
         self._sectPr = sectPr
         self._document_part = document_part
+        self._sections = sections
 
     @property
     def bottom_margin(self):
@@ -222,7 +223,30 @@ class Section(object):
 
     @property
     def paragraphs(self):
-        pass
+        """
+        Returns list of |Paragraph| in this section. 
+        """
+        preceding_sectPr = self._sectPr.preceding_sectPr
+
+        _document_elm = self._sections._document_elm
+        _body_elm = _document_elm.body
+
+        from docx.document import Document
+        _document = Document(_document_elm, self._document_part)
+        
+        if preceding_sectPr is None:
+            start_para_idx = 0
+        else:
+            preceding_sectPr_parent_P = preceding_sectPr.getparent().getparent()
+            start_para_idx = _body_elm.index(preceding_sectPr_parent_P) + 1
+
+        if self._sectPr.is_final_section:
+            last_para_idx = -1
+            return _document.paragraphs[start_para_idx:]
+        else:
+            parent_P = self._sectPr.getparent().getparent()
+            last_para_idx = _body_elm.index(parent_P)
+            return _document.paragraphs[start_para_idx:last_para_idx+1]
 
     @property
     def right_margin(self):

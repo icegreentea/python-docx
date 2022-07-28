@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import pytest
+from docx import enum, section
 
 from docx.enum.section import WD_HEADER_FOOTER, WD_ORIENT, WD_SECTION
 from docx.parts.document import DocumentPart
@@ -52,9 +53,9 @@ class DescribeSections(object):
         section_lst = [sections[idx] for idx in range(3)]
 
         assert Section_.call_args_list == [
-            call(sectPrs[0], document_part_),
-            call(sectPrs[1], document_part_),
-            call(sectPrs[2], document_part_),
+            call(sectPrs[0], document_part_, sections),
+            call(sectPrs[1], document_part_, sections),
+            call(sectPrs[2], document_part_, sections),
         ]
         assert section_lst == [section_, section_, section_]
 
@@ -275,6 +276,36 @@ class DescribeSection(object):
         setattr(section, margin_prop_name, new_value)
 
         assert section._sectPr.xml == expected_xml
+
+    def it_knows_its_paragraphs(self):
+        from docx.text.paragraph import Paragraph
+        doc_element = element(
+            'w:document/w:body/'
+            '('
+                'w:p,w:p,w:p/w:pPr/w:sectPr,'
+                'w:p/w:pPr/w:sectPr,'
+                'w:p,w:p,w:sectPr'
+            ')'
+        )
+        sections = Sections(doc_element, None)
+
+        test_vector = [
+            (3, [0,1,2]),
+            (1, [3]),
+            (2, [4,5])
+        ]
+        for section_idx, (expected_length, matching_indices) in enumerate(test_vector):
+            section = sections[section_idx]
+            assert expected_length == len(section.paragraphs)
+            for i, matching_index in enumerate(matching_indices):
+                assert (doc_element.body.p_lst[matching_index] == 
+                        section.paragraphs[i]._element)
+                assert isinstance(section.paragraphs[i], Paragraph)
+
+    def it_knows_its_paragraphs_when_empty(self):
+        doc_element = element('w:document/w:body/w:sectPr')
+        sections = Sections(doc_element, None)
+        assert 0 == len(sections[0].paragraphs)
 
     # fixtures -------------------------------------------------------
 
