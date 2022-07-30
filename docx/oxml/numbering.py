@@ -4,11 +4,13 @@
 Custom element classes related to the numbering part
 """
 
+from weakref import ReferenceType
+from docx.oxml.text.parfmt import CT_Jc
 from . import OxmlElement
 from .shared import CT_DecimalNumber
-from .simpletypes import ST_DecimalNumber
+from .simpletypes import ST_DecimalNumber, ST_OnOff, ST_String
 from .xmlchemy import (
-    BaseOxmlElement, OneAndOnlyOne, RequiredAttribute, ZeroOrMore, ZeroOrOne
+    BaseOxmlElement, OneAndOnlyOne, OptionalAttribute, RequiredAttribute, ZeroOrMore, ZeroOrOne
 )
 
 
@@ -94,7 +96,13 @@ class CT_Numbering(BaseOxmlElement):
     ``<w:numbering>`` element, the root element of a numbering part, i.e.
     numbering.xml
     """
+    _tag_seq = (
+        'w:numPicBullet', 'w:abstractNum', 'w:num', 'w:numIdMacAtCleanup'
+    )
+    abstractNum = ZeroOrMore('w:abstractNum', successors=_tag_seq[2:])
     num = ZeroOrMore('w:num', successors=('w:numIdMacAtCleanup',))
+
+    del _tag_seq
 
     def add_num(self, abstractNum_id):
         """
@@ -129,3 +137,55 @@ class CT_Numbering(BaseOxmlElement):
             if num not in num_ids:
                 break
         return num
+
+    @property
+    def next_abstract_num_id(self):
+        """
+        The first ``abstractNumId`` unused by a ``<w:abstractNum>`` element.
+        """    
+        abstractNumId_strs = self.xpath('./w:abstractNum/@w:abstractNumId')
+        abstractNumIds = [int(x) for xin in abstractNumId_strs]
+        for num in range(1, len(abstractNumIds)+2):
+            if num not in abstractNumIds:
+                break
+        return num
+
+
+class CT_AbstractNum(BaseOxmlElement):
+    """
+    ``<w:abstractNum>`` element. Defines a base numbering style.
+    """
+    _tag_seq = (
+        'w:nsid', 'w:multiLevelType', 'w:tmpl', 'w:name', 'w:styleLink',
+        'w:numStyleLink', 'w:lvl'
+    )
+
+    name = ZeroOrOne('w:name', successors=_tag_seq[4:])
+    lvl = ZeroOrMore('w:lvl')
+
+    del _tag_seq
+
+    abstractNumId = RequiredAttribute("abstractNumId", ST_DecimalNumber)
+
+
+class CT_Lvl(BaseOxmlElement):
+    _tag_seq = (
+        'w:start', 'w:numFmt', 'w:lvlRestart', 'w:pStyle', 'w:isLgl', 'w:suff',
+        'w:lvlText', 'w:lvlPicBulletId', 'w:legacy', 'w:lvlJc', 'w:pPr', 'w:rPr'
+    )
+    start = ZeroOrOne("w:start", successors=_tag_seq[1:])
+    numFmt = ZeroOrOne("w:numFmt", successors=_tag_seq[2:])
+    lvlRestart = ZeroOrOne("w:lvlRestart", successors=_tag_seq[3:])
+    lvlText = ZeroOrOne("w:lvlText", successors=_tag_seq[7:])
+    lvlJc = ZeroOrOne("w:lvlJc", successors=_tag_seq[10:])
+    pPr = ZeroOrOne("w:pPr", successors=_tag_seq[11:])
+    rPr = ZeroOrOne("w:rPr")
+
+    del _tag_seq
+
+    ilvl = RequiredAttribute('w:ilvl', ST_DecimalNumber)
+
+
+class CT_LevelText(BaseOxmlElement):
+    val = OptionalAttribute("w:val", ST_String)
+    null = OptionalAttribute("w:null", ST_OnOff)

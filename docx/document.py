@@ -8,9 +8,9 @@ from docx.blkcntnr import BlockItemContainer
 from docx.enum.section import WD_SECTION
 from docx.enum.text import WD_BREAK
 from docx.section import Section, Sections
-from docx.shared import ElementProxy, Emu
+from docx.shared import ElementProxy, Emu, Inches
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-
+from docx.numbering import NumberingInstance, AbstractNumberingDefinition
 
 class Document(ElementProxy):
     """WordprocessingML (WML) document.
@@ -239,6 +239,33 @@ class Document(ElementProxy):
         """
         return self._part.next_shape_id
 
+    @property
+    def abstract_numbering_definitions(self):
+        numbering_part = self._part.numbering_part
+        return [
+            AbstractNumberingDefinition(x, numbering_part._element) for x in
+            numbering_part._element.abstractNum_lst
+        ]
+
+    def create_new_bullet_numbering_definition(self, name=None,
+                                               indent_size=Inches(0.25),
+                                               tabsize=Inches(0.25),
+                                               bullet_text="\u2022"):
+        return self._part.numbering_part.create_new_bullet_numbering_definition(
+            name, indent_size, tabsize, bullet_text
+        )
+
+    @property
+    def numbering_instances(self):
+        numbering_part = self._part.numbering_part
+        return [
+            NumberingInstance(x, numbering_part._element) for x in
+            numbering_part._element.num_lst
+        ]
+
+    def start_numbering_instance(self, abstract_numbering_definition):
+        pass
+
 
 class _Body(BlockItemContainer):
     """
@@ -257,3 +284,4 @@ class _Body(BlockItemContainer):
         """
         self._body.clear_content()
         return self
+

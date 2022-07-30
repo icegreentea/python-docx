@@ -301,3 +301,25 @@ class ParagraphFormat(ElementProxy):
             if line == Twips(480):
                 return WD_LINE_SPACING.DOUBLE
         return lineRule
+
+    @classmethod
+    def numbering_level_wrapper(cls, pPr):
+        """
+        Special "constructor" for use by |NumberingLevelDefinition|.
+        That class needs to expose paragraph formatting. |ParagraphFormat| expects
+        to be wrapped around |CT_P|. This constructor creates a fake surrogate
+        paragraph element to work around xmlchemy/lxml questions of double ownership.
+        """
+        class FakeElement:
+            def __init__(self, pPr):
+                if pPr is None:
+                    raise ValueError
+                self._pPr = pPr
+
+            @property
+            def pPr(self):
+                return self._pPr
+
+            def get_or_add_pPr(self):
+                return self._pPr
+        return cls(FakeElement(pPr))

@@ -8,68 +8,44 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import pytest
 
-from docx.oxml.numbering import CT_Numbering
-from docx.parts.numbering import NumberingPart, _NumberingDefinitions
+from docx.api import Document as OpenDocument
+from docx.numbering import AbstractNumberingDefinition, NumberingInstance
+from docx.parts.numbering import NumberingPart
 
-from ..oxml.unitdata.numbering import a_num, a_numbering
-from ..unitutil.mock import class_mock, instance_mock
+from ..unitutil.cxml import element
 
 
 class DescribeNumberingPart(object):
+    def it_can_create_abstract_numbering_definition(self, empty_numbering_fixture):
+        doc, num_part = empty_numbering_fixture
+        ab_num = num_part.create_new_abstract_numbering_definition(name="test_name")
+        assert isinstance(ab_num, AbstractNumberingDefinition)
+        assert "test_name" == ab_num.name
+        
+        assert 1 == len(num_part.abstract_numbering_definitions)
+        assert ab_num == num_part.abstract_numbering_definitions[0]
 
-    def it_provides_access_to_the_numbering_definitions(
-            self, num_defs_fixture):
-        (numbering_part, _NumberingDefinitions_, numbering_elm_,
-         numbering_definitions_) = num_defs_fixture
-        numbering_definitions = numbering_part.numbering_definitions
-        _NumberingDefinitions_.assert_called_once_with(numbering_elm_)
-        assert numbering_definitions is numbering_definitions_
+    def it_can_create_numbering_instances(self, empty_numbering_fixture):
+        doc, num_part = empty_numbering_fixture
+        ab_num = num_part.create_new_abstract_numbering_definition(name="test_name")
+        num_inst = num_part.create_new_numbering_instance(ab_num)
+        assert isinstance(num_inst, NumberingInstance)
 
-    # fixtures -------------------------------------------------------
+        assert 1 == len(num_part.numbering_instances)
 
-    @pytest.fixture
-    def num_defs_fixture(
-            self, _NumberingDefinitions_, numbering_elm_,
-            numbering_definitions_):
-        numbering_part = NumberingPart(None, None, numbering_elm_, None)
-        return (
-            numbering_part, _NumberingDefinitions_, numbering_elm_,
-            numbering_definitions_
-        )
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def _NumberingDefinitions_(self, request, numbering_definitions_):
-        return class_mock(
-            request, 'docx.parts.numbering._NumberingDefinitions',
-            return_value=numbering_definitions_
-        )
+    def it_has(self, empty_numbering_fixture):
+        doc, num_part = empty_numbering_fixture
+        assert isinstance(num_part, NumberingPart)
+        assert 0 == len(num_part.abstract_numbering_definitions)
 
     @pytest.fixture
-    def numbering_definitions_(self, request):
-        return instance_mock(request, _NumberingDefinitions)
+    def template_document_fixture(self, request):
+        doc = OpenDocument()
+        return doc, doc._part.numbering_part
 
     @pytest.fixture
-    def numbering_elm_(self, request):
-        return instance_mock(request, CT_Numbering)
+    def empty_numbering_fixture(self, request):
+        doc = OpenDocument()
+        doc._part.numbering_part._element = element("w:numbering")
+        return doc, doc._part.numbering_part
 
-
-class Describe_NumberingDefinitions(object):
-
-    def it_knows_how_many_numbering_definitions_it_contains(
-            self, len_fixture):
-        numbering_definitions, numbering_definition_count = len_fixture
-        assert len(numbering_definitions) == numbering_definition_count
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(params=[0, 1, 2, 3])
-    def len_fixture(self, request):
-        numbering_definition_count = request.param
-        numbering_bldr = a_numbering().with_nsdecls()
-        for idx in range(numbering_definition_count):
-            numbering_bldr.with_child(a_num())
-        numbering_elm = numbering_bldr.element
-        numbering_definitions = _NumberingDefinitions(numbering_elm)
-        return numbering_definitions, numbering_definition_count
