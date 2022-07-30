@@ -4,14 +4,25 @@ from docx.shared import ElementProxy, Inches
 
 
 class NumberingInstance:
-    def __init__(self, numbering_element, numbering_part, document):
+    def __init__(self, numbering_element, numbering_part, document_part):
+        from docx.document import Document
         self._numbering_part = numbering_part
-        self._doc = document
+        self._doc_part = document_part
         self._element = numbering_element
+        self._doc = Document(self._doc_part.element, self._doc_part)
 
     def add_paragraph(self, indent_level, text):
-        pass
+        para = self._doc.add_paragraph(text)
+        p_elm = para._element
+        pPr = p_elm.get_or_add_pPr()
+        numPr = pPr.get_or_add_numPr()
+        ilvl = numPr.get_or_add_ilvl()
+        ilvl.val = indent_level
 
+        numId = numPr.get_or_add_numId()
+        numId.val = self._element.numId
+
+        return para
 
 class AbstractNumberingDefinition(ElementProxy, Sequence):
     @property

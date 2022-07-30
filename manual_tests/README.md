@@ -1,0 +1,1 @@
+Run these by running `pytest -m manual` from root.

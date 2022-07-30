@@ -16,7 +16,7 @@ from ..unitutil.cxml import element
 
 
 class DescribeNumberingPart(object):
-    def it_can_create_abstract_numbering_definition(self, empty_numbering_fixture):
+    def it_can_create_and_listabstract_numbering_definition(self, empty_numbering_fixture):
         doc, num_part = empty_numbering_fixture
         ab_num = num_part.create_new_abstract_numbering_definition(name="test_name")
         assert isinstance(ab_num, AbstractNumberingDefinition)
@@ -25,7 +25,7 @@ class DescribeNumberingPart(object):
         assert 1 == len(num_part.abstract_numbering_definitions)
         assert ab_num == num_part.abstract_numbering_definitions[0]
 
-    def it_can_create_numbering_instances(self, empty_numbering_fixture):
+    def it_can_create_and_list_numbering_instances(self, empty_numbering_fixture):
         doc, num_part = empty_numbering_fixture
         ab_num = num_part.create_new_abstract_numbering_definition(name="test_name")
         num_inst = num_part.create_new_numbering_instance(ab_num)

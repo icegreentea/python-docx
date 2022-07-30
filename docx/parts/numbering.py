@@ -21,7 +21,6 @@ class NumberingPart(XmlPart):
     Proxy for the numbering.xml part containing numbering definitions for
     a document or glossary.
     """
-    '''
     @classmethod
     def new(cls):
         """
@@ -29,7 +28,7 @@ class NumberingPart(XmlPart):
         ``<w:numbering>`` element.
         """
         raise NotImplementedError
-
+    '''
     @lazyproperty
     def numbering_definitions(self):
         """
@@ -71,7 +70,9 @@ class NumberingPart(XmlPart):
             _tabsize_emu = Twips(tabsize * (i+2)).emu
             _indent_emu = Twips(indent_size).emu
 
+            lvl.get_or_add_numFmt()
             lvl.numFmt.val = "bullet"
+            lvl.get_or_add_lvlText()
             lvl.lvlText.val = bullet_text
             pPr = lvl.get_or_add_pPr()
 

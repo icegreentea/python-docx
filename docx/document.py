@@ -241,31 +241,22 @@ class Document(ElementProxy):
 
     @property
     def abstract_numbering_definitions(self):
-        numbering_part = self._part.numbering_part
-        return [
-            AbstractNumberingDefinition(x, numbering_part._element) for x in
-            numbering_part._element.abstractNum_lst
-        ]
-
-    def create_new_bullet_numbering_definition(self, name=None,
-                                               indent_size=Inches(0.25),
-                                               tabsize=Inches(0.25),
-                                               bullet_text="\u2022"):
-        return self._part.numbering_part.create_new_bullet_numbering_definition(
-            name, indent_size, tabsize, bullet_text
-        )
+        return self._part.numbering_part.abstract_numbering_definitions
 
     @property
     def numbering_instances(self):
-        numbering_part = self._part.numbering_part
-        return [
-            NumberingInstance(x, numbering_part._element) for x in
-            numbering_part._element.num_lst
-        ]
+        return self._part.numbering_part.numbering_instances
 
-    def start_numbering_instance(self, abstract_numbering_definition):
-        pass
+    def create_new_abstract_numbering_definition(self, name=None):
+        return self._part.numbering_part.create_new_abstract_numbering_definition(name)
 
+    def create_new_bullet_definition(self, name=None, indent_size=Inches(0.25),
+                                     tabsize=Inches(0.25), bullet_text="\u2022"):
+        return self._part.numbering_part.\
+            create_new_bullet_definition(name, indent_size, tabsize, bullet_text)
+    
+    def create_new_numbering_instance(self, abstract_numbering_definition):
+        return self._part.numbering_part.create_new_numbering_instance(abstract_numbering_definition)
 
 class _Body(BlockItemContainer):
     """

@@ -144,7 +144,7 @@ class CT_Numbering(BaseOxmlElement):
         The first ``abstractNumId`` unused by a ``<w:abstractNum>`` element.
         """    
         abstractNumId_strs = self.xpath('./w:abstractNum/@w:abstractNumId')
-        abstractNumIds = [int(x) for xin in abstractNumId_strs]
+        abstractNumIds = [int(x) for x in abstractNumId_strs]
         for num in range(1, len(abstractNumIds)+2):
             if num not in abstractNumIds:
                 break
