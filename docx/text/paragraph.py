@@ -29,8 +29,9 @@ class Paragraph(RunItemContainer):
         if hyperlink_url is not None and document is None:
             raise ValueError("Need document object to add hyperlink URL.")
         if hyperlink_url is not None and relationship_id is not None:
-            raise ValueError("Only one of `hyperlink_url` and `relationship_id` can be set at once.")
-        
+            raise ValueError('Only one of `hyperlink_url` and `relationship_id` '
+                             'can be set at once.')
+
         _hyperlink = self._element.add_hyperlink()
 
         hyperlink = Hyperlink(_hyperlink, self)
@@ -41,7 +42,7 @@ class Paragraph(RunItemContainer):
             hyperlink.relationship_id = relationship_id
         if hyperlink_url is not None and document is not None:
             if style is None:
-                _hyperlink_style = Hyperlink.add_hyperlink_styles(document)
+                Hyperlink.add_hyperlink_styles(document)
                 run.style = "Hyperlink"
             else:
                 run.style = style

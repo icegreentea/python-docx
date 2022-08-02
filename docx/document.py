@@ -114,7 +114,7 @@ class Document(ElementProxy):
 
     def get_hyperlink_target(self, hyperlink):
         """
-        Returns |Relationship| object representing the target of *hyperlink*.
+        Returns |_Relationship| object representing the target of *hyperlink*.
         *hyperlink* should either be a relationship ID (string) or a |Hyperlink|
         object.
         """
@@ -134,8 +134,8 @@ class Document(ElementProxy):
 
     def add_hyperlink_relationship(self, hyperlink_target, rId=None):
         """
-        Creates and returns |Relationship| object targetting external 
-        *hyperlink_target*. |Relationship| object will have type HYPERLINK. 
+        Creates and returns |_Relationship| object targetting external
+        *hyperlink_target*. |_Relationship| object will have type HYPERLINK.
         If *rId* is None, will automatically get next free relationship id.
         """
         if rId is None:
@@ -257,4 +257,3 @@ class _Body(BlockItemContainer):
         """
         self._body.clear_content()
         return self
-

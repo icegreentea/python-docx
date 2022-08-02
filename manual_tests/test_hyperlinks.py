@@ -26,6 +26,7 @@ class ManuallyCheckHyperlinks:
         doc = OpenDocument()
         p = doc.add_paragraph()
         p.add_run("Some opening text. ")
-        p.add_hyperlink("Link text. ", hyperlink_url="https://www.google.com", document=doc)
+        p.add_hyperlink("Link text. ", hyperlink_url="https://www.google.com",
+                        document=doc)
         p.add_run("Some more normal text. ")
         save_document(doc, "hyperlinks-1.docx")

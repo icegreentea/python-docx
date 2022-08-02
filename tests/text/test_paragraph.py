@@ -13,7 +13,6 @@ from docx.text.hyperlink import Hyperlink
 from docx.text.paragraph import Paragraph
 from docx.text.parfmt import ParagraphFormat
 from docx.text.run import Run
-from docx.api import Document as OpenDocument
 
 import pytest
 

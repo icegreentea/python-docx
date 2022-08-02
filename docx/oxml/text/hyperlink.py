@@ -11,7 +11,7 @@ from ..simpletypes import ST_RelationshipId, ST_String
 
 class CT_Hyperlink(BaseOxmlElement):
     """
-    ``<w:hyperlink>`` element, containing properties and text for a hyperlink 
+    ``<w:hyperlink>`` element, containing properties and text for a hyperlink
     (internal and external)
     """
     r = ZeroOrMore('w:r')
