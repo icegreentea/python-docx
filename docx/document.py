@@ -9,6 +9,7 @@ from docx.enum.section import WD_SECTION
 from docx.enum.text import WD_BREAK
 from docx.section import Section, Sections
 from docx.shared import ElementProxy, Emu
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 
 
 class Document(ElementProxy):
@@ -110,6 +111,38 @@ class Document(ElementProxy):
         properties of this document.
         """
         return self._part.core_properties
+
+    def get_hyperlink_target(self, hyperlink):
+        """
+        Returns |_Relationship| object representing the target of *hyperlink*.
+        *hyperlink* should either be a relationship ID (string) or a |Hyperlink|
+        object.
+        """
+        if isinstance(hyperlink, str):
+            rId = hyperlink
+        else:
+            rId = hyperlink.relationship_id
+            if rId is None:
+                raise ValueError(
+                    "Missing `relationship_id` in passed in hyperlink object.")
+        relationship = self._part.rels.get(rId, None)
+        if relationship is None:
+            return None
+        if relationship.reltype != RT.HYPERLINK:
+            raise ValueError("Relationship type must be HYPERLINK")
+        return relationship
+
+    def add_hyperlink_relationship(self, hyperlink_target, rId=None):
+        """
+        Creates and returns |_Relationship| object targetting external
+        *hyperlink_target*. |_Relationship| object will have type HYPERLINK.
+        If *rId* is None, will automatically get next free relationship id.
+        """
+        if rId is None:
+            rId = self._part.rels._next_rId
+        rel = self._part.rels.add_relationship(RT.HYPERLINK, hyperlink_target, rId,
+                                               is_external=True)
+        return rel
 
     @property
     def inline_shapes(self):

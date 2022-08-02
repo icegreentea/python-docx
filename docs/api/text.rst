@@ -47,3 +47,10 @@ Text-related objects
    :members: clear_all
 
    .. automethod:: docx.text.tabstops.TabStops.add_tab_stop(position, alignment=WD_TAB_ALIGNMENT.LEFT, leader=WD_TAB_LEADER.SPACES)
+
+
+|Hyperlink| objects
+-------------------
+
+.. autoclass:: docx.text.hyperlink.Hyperlink()
+   :members:

@@ -19,6 +19,8 @@ from docx.styles.styles import Styles
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 from docx.text.run import Run
+from docx.api import Document as OpenDocument
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 
 from .unitutil.cxml import element, xml
 from .unitutil.mock import class_mock, instance_mock, method_mock, property_mock
@@ -172,6 +174,18 @@ class DescribeDocument(object):
         width = document._block_width
         assert isinstance(width, Length)
         assert width == expected_value
+
+    def it_can_add_hyperlink_relationship(self):
+        doc = OpenDocument()
+        relationship = doc.add_hyperlink_relationship("https://www.example.com")
+        assert relationship.is_external
+        assert relationship.target_ref == "https://www.example.com"
+        assert relationship.rId is not None
+        assert relationship.reltype == RT.HYPERLINK
+
+        rel2 = doc.get_hyperlink_target(relationship.rId)
+        assert rel2.target_ref == "https://www.example.com"
+        assert rel2.reltype == RT.HYPERLINK
 
     # fixtures -------------------------------------------------------
 
