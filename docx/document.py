@@ -11,6 +11,7 @@ from docx.section import Section, Sections
 from docx.shared import ElementProxy, Emu
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 
+
 class Document(ElementProxy):
     """WordprocessingML (WML) document.
 
@@ -111,27 +112,34 @@ class Document(ElementProxy):
         """
         return self._part.core_properties
 
-    @property
-    def _external_hyperlink_map(self):
+    def get_hyperlink_target(self, hyperlink):
         """
-        A read-only dictionary mapping relationship ID to external hyperlink target.
+        Returns |Relationship| object representing the target of *hyperlink*.
+        *hyperlink* should either be a relationship ID (string) or a |Hyperlink|
+        object.
         """
-        hyperlink_target_dict = {}
-        for relId, rel in self._part.rels.items():
-            if rel.rel_type == RT.HYPERLINK:
-                hyperlink_target_dict[relId] = rel._target
-        return hyperlink_target_dict
-
-    def hyperlink_target_by_id(self, rId):
+        if isinstance(hyperlink, str):
+            rId = hyperlink
+        else:
+            rId = hyperlink.relationship_id
+            if rId is None:
+                raise ValueError(
+                    "Missing `relationship_id` in passed in hyperlink object.")
         relationship = self._part.rels.get(rId, None)
         if relationship is None:
             return None
-        if relationship.rel_type != RT.HYPERLINK:
-            return None
-        return relationship._target
+        if relationship.reltype != RT.HYPERLINK:
+            raise ValueError("Relationship type must be HYPERLINK")
+        return relationship
 
-    def add_hyperlink_relationship(self, hyperlink_target):
-        rId = self._part.rels._next_rId
+    def add_hyperlink_relationship(self, hyperlink_target, rId=None):
+        """
+        Creates and returns |Relationship| object targetting external 
+        *hyperlink_target*. |Relationship| object will have type HYPERLINK. 
+        If *rId* is None, will automatically get next free relationship id.
+        """
+        if rId is None:
+            rId = self._part.rels._next_rId
         rel = self._part.rels.add_relationship(RT.HYPERLINK, hyperlink_target, rId,
                                                is_external=True)
         return rel

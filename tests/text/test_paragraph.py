@@ -126,21 +126,6 @@ class DescribeParagraph(object):
     # fixtures -------------------------------------------------------
 
     @pytest.fixture(params=[
-        (
-            {'relationship_id':'rId1'}, 
-            'w:p{r:d=d}/w:hyperlink{r:id=rId1}/w:r/w:t"test")'
-        ),
-        (
-            {'relationship_id':'rId1'}, 
-            'w:p{r:d=d}/w:hyperlink{r:id=rId1}/w:r/w:t"test")'
-        ),
-
-    ])
-    def add_hyperlink_fixture(self, request):
-        p = Paragraph(element('w:p{r:d=d}'), None)
-
-
-    @pytest.fixture(params=[
         ('w:p', None,     None,     'w:p/w:r'),
         ('w:p', 'foobar', None,     'w:p/w:r/w:t"foobar"'),
         ('w:p', None,     'Strong', 'w:p/w:r'),
