@@ -81,6 +81,7 @@ User Guide
    user/styles-understanding
    user/styles-using
    user/shapes
+   user/hyperlinks
 
 
 API Documentation

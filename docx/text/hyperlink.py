@@ -54,7 +54,11 @@ class Hyperlink(RunItemContainer):
         return [Run(r, self) for r in self._element.r_lst]
 
     @classmethod
-    def add_hyperlink_styles(cls, document):
+    def add_hyperlink_styles(cls, document, link_color="0563C1"):
+        """
+        Helper method that adds a realized and suitable "Hyperlink" character style
+        to the document if it does not already exist.
+        """
         from docx.enum.style import WD_STYLE_TYPE
         from docx.enum.dml import MSO_THEME_COLOR
         styles = document.styles
@@ -63,8 +67,20 @@ class Hyperlink(RunItemContainer):
         except (ValueError, KeyError):
             _style = styles.add_style("Hyperlink", WD_STYLE_TYPE.CHARACTER, True)
             _style.base_style = styles["Default Paragraph Font"]
-            _style.font.color.rgb = RGBColor.from_string("0563C1")
+            _style.font.color.rgb = RGBColor.from_string(link_color)
             _style.font.color.theme_color = MSO_THEME_COLOR.HYPERLINK
             _style.font.underline = True
         else:
             pass
+
+    def update_external_target(self, new_target, document):
+        """
+        Update the external target in document relationships. Use to change what
+        external hyperlink points to for example.
+        """
+        if self.relationship_id is None:
+            raise ValueError("Cannot update a relationship without having a"
+                             " relationship id.")
+        document._part.rels._update_external_rel_target(self.relationship_id,
+                                                        new_target)
+        

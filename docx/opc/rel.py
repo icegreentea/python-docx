@@ -137,6 +137,12 @@ class Relationships(dict):
             if rId_candidate not in self:
                 return rId_candidate
 
+    def _update_external_rel_target(self, rId, new_target):
+        """
+        Set the ``Target`` attribute of the underlying ``<Relationship>`` element.
+        """
+        self[rId]._target = new_target
+
 
 class _Relationship(object):
     """

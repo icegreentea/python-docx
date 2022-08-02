@@ -29,6 +29,17 @@ class DescribeHyperlink:
         hyperlink, _, expected_is_external = target_fixture
         assert hyperlink.is_external == expected_is_external
 
+    def it_can_change_its_external_target(self):
+        doc = OpenDocument()
+        p = doc.add_paragraph()
+        hyperlink = p.add_hyperlink("link", hyperlink_url="https://www.example.com",
+                                    document=doc)
+        assert "https://www.example.com" == \
+            doc._part.rels[hyperlink.relationship_id]._target
+        hyperlink.update_external_target("https://www.youtube.com", doc)
+        assert "https://www.youtube.com" == \
+            doc._part.rels[hyperlink.relationship_id]._target
+
     def it_provides_access_to_the_runs_it_contains(self, runs_fixture):
         hyperlink, expected_runs_text = runs_fixture
         assert len(expected_runs_text) == len(hyperlink.runs)

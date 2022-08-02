@@ -117,6 +117,8 @@ rst_epilog = """
 
 .. |HeaderPart| replace:: :class:`.HeaderPart`
 
+.. |Hyperlink| replace:: :class:`.Hyperlink`
+
 .. |ImageParts| replace:: :class:`.ImageParts`
 
 .. |Inches| replace:: :class:`.Inches`
