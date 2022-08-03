@@ -4,13 +4,12 @@
 Custom element classes related to the numbering part
 """
 
-from weakref import ReferenceType
-from docx.oxml.text.parfmt import CT_Jc
 from . import OxmlElement
 from .shared import CT_DecimalNumber
 from .simpletypes import ST_DecimalNumber, ST_OnOff, ST_String
 from .xmlchemy import (
-    BaseOxmlElement, OneAndOnlyOne, OptionalAttribute, RequiredAttribute, ZeroOrMore, ZeroOrOne
+    BaseOxmlElement, OneAndOnlyOne, OptionalAttribute, RequiredAttribute, ZeroOrMore,
+    ZeroOrOne
 )
 
 
@@ -142,7 +141,7 @@ class CT_Numbering(BaseOxmlElement):
     def next_abstract_num_id(self):
         """
         The first ``abstractNumId`` unused by a ``<w:abstractNum>`` element.
-        """    
+        """
         abstractNumId_strs = self.xpath('./w:abstractNum/@w:abstractNumId')
         abstractNumIds = [int(x) for x in abstractNumId_strs]
         for num in range(1, len(abstractNumIds)+2):

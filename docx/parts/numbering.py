@@ -8,10 +8,8 @@ from __future__ import (
     absolute_import, division, print_function, unicode_literals
 )
 
-from docx.enum.text import WD_TAB_ALIGNMENT
-
 from ..opc.part import XmlPart
-from ..shared import Emu, Twips, lazyproperty
+from ..shared import Emu, lazyproperty
 from docx.shared import Inches
 from docx.numbering import AbstractNumberingDefinition, NumberingInstance
 
@@ -49,9 +47,15 @@ class NumberingPart(XmlPart):
 
     @property
     def numbering_instances(self):
-        return [NumberingInstance(x, self, self._document_part) for x in self._element.num_lst]
+        return [NumberingInstance(x, self, self._document_part) for x in
+                self._element.num_lst]
 
-    def create_new_abstract_numbering_definition(self, name=None):
+    def create_new_abstract_numbering_definition(self,
+                                                 name=None,
+                                                 hanging_indent=Inches(0.25),
+                                                 leading_indent=Inches(0.5),
+                                                 tabsize=Inches(0.25)
+                                                 ):
         abstractNum_el = self._element.add_abstractNum()
         abstractNum_el.abstractNumId = self._element.next_abstract_num_id
         if name is not None:
@@ -60,31 +64,39 @@ class NumberingPart(XmlPart):
         for i in range(0, 9):
             lvl = abstractNum_el.add_lvl()
             lvl.ilvl = i
+            pPr = lvl.get_or_add_pPr()
+            indent = pPr.get_or_add_ind()
+            indent.left = Emu(leading_indent).emu + i * Emu(tabsize).emu
+            indent.hanging = Emu(hanging_indent).emu
         return AbstractNumberingDefinition(abstractNum_el)
 
-    def create_new_bullet_definition(self, name=None, indent_size=Inches(0.25),
-                                     tabsize=Inches(0.25), bullet_text="\u2022"):
-        abstract_num = self.create_new_abstract_numbering_definition(name)
-        abstract_num_el = abstract_num._element
-        for i, lvl in enumerate(abstract_num_el.lvl_lst):
-            #_tabsize_twips = Emu(tabsize * (i+2)).twips
-            _tabsize_emu = Emu(tabsize * (i+2)).emu
-            #_indent_twips = Emu(tabsize).twips
-            _indent_emu = Emu(indent_size).emu
+    def create_new_bullet_definition(self, name=None,
+                                     hanging_indent=Inches(0.25),
+                                     leading_indent=Inches(0.5),
+                                     tabsize=Inches(0.25),
+                                     bullet_text="\u2022"):
+        abstract_num = \
+            self.create_new_abstract_numbering_definition(name,
+                                                          hanging_indent=hanging_indent,
+                                                          leading_indent=leading_indent,
+                                                          tabsize=tabsize)
+        abstract_num.set_level_number_format("bullet")
+        abstract_num.set_level_text(bullet_text)
+        return abstract_num
 
-            lvl.get_or_add_numFmt()
-            lvl.numFmt.val = "bullet"
-            lvl.get_or_add_lvlText()
-            lvl.lvlText.val = bullet_text
-            pPr = lvl.get_or_add_pPr()
-
-            #tabstops = pPr._add_tabs()
-            #tabstops.insert_tab_in_order(_indent_emu, WD_TAB_ALIGNMENT.NUM, None)
-
-            indent = pPr.get_or_add_ind()
-            indent.left = _tabsize_emu
-            indent.hanging = _indent_emu
-
+    def create_new_simple_decimal_definition(self, name=None,
+                                             hanging_indent=Inches(0.25),
+                                             leading_indent=Inches(0.5),
+                                             tabsize=Inches(0.25)):
+        abstract_num = \
+            self.create_new_abstract_numbering_definition(name,
+                                                          hanging_indent=hanging_indent,
+                                                          leading_indent=leading_indent,
+                                                          tabsize=tabsize)
+        abstract_num.set_level_number_format("decimal")
+        for i, lvl in enumerate(abstract_num):
+            lvl.numbering_level_text = "%{}.".format(lvl.numbering_level + 1)
+            lvl.start = 1
         return abstract_num
 
     def create_new_numbering_instance(self, abstract_numbering_definition):
@@ -97,17 +109,3 @@ class NumberingPart(XmlPart):
 
     def clear_numbering_instances(self):
         self._element.remove_all('w:num')
-
-'''
-class _NumberingDefinitions(object):
-    """
-    Collection of |_NumberingDefinition| instances corresponding to the
-    ``<w:num>`` elements in a numbering part.
-    """
-    def __init__(self, numbering_elm):
-        super(_NumberingDefinitions, self).__init__()
-        self._numbering = numbering_elm
-
-    def __len__(self):
-        return len(self._numbering.num_lst)
-'''

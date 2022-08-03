@@ -2,7 +2,6 @@ import pytest
 import os
 
 import docx
-from docx.oxml.ns import qn
 
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(CURDIR, "output")
@@ -19,13 +18,19 @@ class ManuallyCheckNumbering:
     @pytest.mark.manual
     def it_can_create_bullets(self):
         doc = docx.Document()
-        for child in doc._part.numbering_part._element[:]:
-            if child.tag == qn("w:abstractNum") or child.tag == qn("w:num"):
-                doc._part.numbering_part._element.remove(child)
-
         abnum = doc.create_new_bullet_definition()
         numist = doc.create_new_numbering_instance(abnum)
         numist.add_paragraph(0, "b1")
         numist.add_paragraph(0, "b2")
         numist.add_paragraph(1, "b3")
         save_document(doc, "bullet-list.docx")
+
+    @pytest.mark.manual
+    def it_can_create_decimal(self):
+        doc = docx.Document()
+        abnum = doc.create_new_simple_decimal_definition()
+        numist = doc.create_new_numbering_instance(abnum)
+        numist.add_paragraph(0, "b1")
+        numist.add_paragraph(0, "b2")
+        numist.add_paragraph(1, "b3")
+        save_document(doc, "numbering-decimal-list.docx")

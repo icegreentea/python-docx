@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from copy import deepcopy
-from docx.shared import ElementProxy, Inches
+from docx.shared import ElementProxy
 
 
 class NumberingInstance:
@@ -52,6 +52,22 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
 
     def __len__(self):
         return len(self._element.lvl_lst)
+
+    def set_level_number_format(self, number_format):
+        if isinstance(number_format, str):
+            for i, lvl in enumerate(self):
+                lvl.number_format = number_format
+        else:
+            for i, lvl in enumerate(self):
+                lvl.number_format = number_format[i]
+
+    def set_level_text(self, numbering_level_text):
+        if isinstance(numbering_level_text, str):
+            for i, lvl in enumerate(self):
+                lvl.numbering_level_text = numbering_level_text
+        else:
+            for i, lvl in enumerate(self):
+                lvl.numbering_level_text = numbering_level_text[i]
 
 
 class NumberingLevelDefinition(ElementProxy):

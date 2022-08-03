@@ -10,7 +10,7 @@ from docx.enum.text import WD_BREAK
 from docx.section import Section, Sections
 from docx.shared import ElementProxy, Emu, Inches
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-from docx.numbering import NumberingInstance, AbstractNumberingDefinition
+
 
 class Document(ElementProxy):
     """WordprocessingML (WML) document.
@@ -247,16 +247,41 @@ class Document(ElementProxy):
     def numbering_instances(self):
         return self._part.numbering_part.numbering_instances
 
-    def create_new_abstract_numbering_definition(self, name=None):
-        return self._part.numbering_part.create_new_abstract_numbering_definition(name)
-
-    def create_new_bullet_definition(self, name=None, indent_size=Inches(0.25),
-                                     tabsize=Inches(0.25), bullet_text="\u2022"):
+    def create_new_abstract_numbering_definition(self, name=None,
+                                                 hanging_indent=Inches(0.25),
+                                                 leading_indent=Inches(0.5),
+                                                 tabsize=Inches(0.25)):
         return self._part.numbering_part.\
-            create_new_bullet_definition(name, indent_size, tabsize, bullet_text)
-    
+            create_new_abstract_numbering_definition(name,
+                                                     hanging_indent=hanging_indent,
+                                                     leading_indent=leading_indent,
+                                                     tabsize=tabsize)
+
+    def create_new_bullet_definition(self,
+                                     name=None,
+                                     hanging_indent=Inches(0.25),
+                                     leading_indent=Inches(0.5),
+                                     tabsize=Inches(0.25),
+                                     bullet_text="\u2022"):
+        return self._part.numbering_part.\
+            create_new_bullet_definition(name, hanging_indent=hanging_indent,
+                                         leading_indent=leading_indent, tabsize=tabsize,
+                                         bullet_text=bullet_text)
+
+    def create_new_simple_decimal_definition(self, name=None,
+                                             hanging_indent=Inches(0.25),
+                                             leading_indent=Inches(0.5),
+                                             tabsize=Inches(0.25)):
+        return self._part.numbering_part.\
+            create_new_simple_decimal_definition(name, hanging_indent=hanging_indent,
+                                                 leading_indent=leading_indent,
+                                                 tabsize=tabsize,
+                                                 )
+
     def create_new_numbering_instance(self, abstract_numbering_definition):
-        return self._part.numbering_part.create_new_numbering_instance(abstract_numbering_definition)
+        return self._part.numbering_part.\
+            create_new_numbering_instance(abstract_numbering_definition)
+
 
 class _Body(BlockItemContainer):
     """
@@ -275,4 +300,3 @@ class _Body(BlockItemContainer):
         """
         self._body.clear_content()
         return self
-
