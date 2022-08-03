@@ -241,21 +241,42 @@ class Document(ElementProxy):
 
     @property
     def abstract_numbering_definitions(self):
+        """
+        Sequence of |AbstractNumberingDefinition| contained in document.
+        """
         return self._part.numbering_part.abstract_numbering_definitions
 
     @property
     def numbering_instances(self):
+        """
+        Sequence of |NumberingInstance| contained in the document.
+        """
         return self._part.numbering_part.numbering_instances
 
-    def create_new_abstract_numbering_definition(self, name=None,
+    def create_new_abstract_numbering_definition(self,
+                                                 name=None,
                                                  hanging_indent=Inches(0.25),
                                                  leading_indent=Inches(0.5),
                                                  tabsize=Inches(0.25)):
-        return self._part.numbering_part.\
-            create_new_abstract_numbering_definition(name,
-                                                     hanging_indent=hanging_indent,
-                                                     leading_indent=leading_indent,
-                                                     tabsize=tabsize)
+        """
+        Create and return |AbstractNumberingDefinition| instance with next
+        free ``abstractNumId``.
+
+        *hanging_indent* is the additional indent used on body text after the first
+        line. Use of *hanging_indent* allows the start margin of body text to be aligned
+        across multiple lines.
+        *leading_indent* is the indent from document start margin to start marign of
+        body text on the first line. It is NOT the indent to the list marker.
+        *tabsize* is the additional indent to be applied for each additional numbering
+        level.
+        *levels* is the number of child ``<w:lvl>`` elements to create. The maximum is
+        9.
+        """
+        return self._part.numbering_part.create_new_abstract_numbering_definition(
+            name,
+            hanging_indent=hanging_indent,
+            leading_indent=leading_indent,
+            tabsize=tabsize)
 
     def create_new_bullet_definition(self,
                                      name=None,
@@ -263,20 +284,41 @@ class Document(ElementProxy):
                                      leading_indent=Inches(0.5),
                                      tabsize=Inches(0.25),
                                      bullet_text="\u2022"):
-        return self._part.numbering_part.\
-            create_new_bullet_definition(name, hanging_indent=hanging_indent,
-                                         leading_indent=leading_indent, tabsize=tabsize,
-                                         bullet_text=bullet_text)
+        """
+        Create and return |AbstractNumberingDefinition| instance with next free
+        ``abstractNumId`` that implements a simple bullet (unordered) list style.
 
-    def create_new_simple_decimal_definition(self, name=None,
+        *bullet_text* is the bullet symbol to be used. Pass in length 9 sequence of 
+        characters to set different bullet symbols for each level. Alternatively,
+        you can iterate over the returned object and set ``lvl.numbering_level_text``
+        for each level directly.
+
+        See ``create_new_abstract_numbering_definition`` for other parameters.
+        """
+        abnum = self.create_new_abstract_numbering_definition(
+            name, hanging_indent=hanging_indent, leading_indent=leading_indent, 
+            tabsize=tabsize)
+        abnum.set_level_number_format("bullet").set_level_text(bullet_text)
+        return abnum
+
+    def create_new_simple_decimal_definition(self,
+                                             name=None,
                                              hanging_indent=Inches(0.25),
                                              leading_indent=Inches(0.5),
                                              tabsize=Inches(0.25)):
-        return self._part.numbering_part.\
-            create_new_simple_decimal_definition(name, hanging_indent=hanging_indent,
-                                                 leading_indent=leading_indent,
-                                                 tabsize=tabsize,
-                                                 )
+        """
+        Create and return |AbstractNumberingDefinition| instance with next free
+        ``abstractNumId`` that implements a simple decimal (ordered) list style.
+
+        See ``create_new_abstract_numbering_definition`` for other parameters.
+        """
+        abnum = self.create_new_abstract_numbering_definition(
+            name, hanging_indent=hanging_indent, leading_indent=leading_indent,
+            tabsize=tabsize)
+        abnum.set_level_number_format("decimal").set_level_start(1)
+        for lvl in abnum:
+            lvl.numbering_level_text = "%{}.".format(lvl.numbering_level + 1)
+        return abnum
 
     def create_new_numbering_instance(self, abstract_numbering_definition):
         return self._part.numbering_part.\

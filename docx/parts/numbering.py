@@ -42,11 +42,17 @@ class NumberingPart(XmlPart):
 
     @property
     def abstract_numbering_definitions(self):
+        """
+        Sequence of |AbstractNumberingDefinition| contained in document.
+        """
         return [AbstractNumberingDefinition(x, self._element)
                 for x in self._element.abstractNum_lst]
 
     @property
     def numbering_instances(self):
+        """
+        Sequence of |NumberingInstance| contained in the document.
+        """
         return [NumberingInstance(x, self, self._document_part) for x in
                 self._element.num_lst]
 
@@ -54,58 +60,47 @@ class NumberingPart(XmlPart):
                                                  name=None,
                                                  hanging_indent=Inches(0.25),
                                                  leading_indent=Inches(0.5),
-                                                 tabsize=Inches(0.25)
+                                                 tabsize=Inches(0.25),
+                                                 levels=9
                                                  ):
+        """
+        Create and return |AbstractNumberingDefinition| instance with next
+        free ``abstractNumId``.
+
+        *hanging_indent* is the additional indent used on body text after the first
+        line. Use of *hanging_indent* allows the start margin of body text to be aligned
+        across multiple lines.
+        *leading_indent* is the indent from document start margin to start marign of
+        body text on the first line. It is NOT the indent to the list marker.
+        *tabsize* is the additional indent to be applied for each additional numbering
+        level.
+        *levels* is the number of child ``<w:lvl>`` elements to create. The maximum is
+        9.
+        """
         abstractNum_el = self._element.add_abstractNum()
         abstractNum_el.abstractNumId = self._element.next_abstract_num_id
-        if name is not None:
-            _name = abstractNum_el.get_or_add_name()
-            _name.val = name
-        for i in range(0, 9):
-            lvl = abstractNum_el.add_lvl()
-            lvl.ilvl = i
-            pPr = lvl.get_or_add_pPr()
-            indent = pPr.get_or_add_ind()
-            indent.left = Emu(leading_indent).emu + i * Emu(tabsize).emu
-            indent.hanging = Emu(hanging_indent).emu
-        return AbstractNumberingDefinition(abstractNum_el)
-
-    def create_new_bullet_definition(self, name=None,
-                                     hanging_indent=Inches(0.25),
-                                     leading_indent=Inches(0.5),
-                                     tabsize=Inches(0.25),
-                                     bullet_text="\u2022"):
-        abstract_num = \
-            self.create_new_abstract_numbering_definition(name,
-                                                          hanging_indent=hanging_indent,
-                                                          leading_indent=leading_indent,
-                                                          tabsize=tabsize)
-        abstract_num.set_level_number_format("bullet")
-        abstract_num.set_level_text(bullet_text)
-        return abstract_num
-
-    def create_new_simple_decimal_definition(self, name=None,
-                                             hanging_indent=Inches(0.25),
-                                             leading_indent=Inches(0.5),
-                                             tabsize=Inches(0.25)):
-        abstract_num = \
-            self.create_new_abstract_numbering_definition(name,
-                                                          hanging_indent=hanging_indent,
-                                                          leading_indent=leading_indent,
-                                                          tabsize=tabsize)
-        abstract_num.set_level_number_format("decimal")
-        for i, lvl in enumerate(abstract_num):
-            lvl.numbering_level_text = "%{}.".format(lvl.numbering_level + 1)
-            lvl.start = 1
-        return abstract_num
+        return AbstractNumberingDefinition.\
+            initialize_element(abstractNum_el, name=name, hanging_indent=hanging_indent,
+                               leading_indent=leading_indent, tabsize=tabsize, 
+                               levels=levels)
 
     def create_new_numbering_instance(self, abstract_numbering_definition):
+        """
+        Create and return a new |NumberingInstance| referencing 
+        *abstract_numbering_definition*.
+        """
         num_el = self._element.add_num(abstract_numbering_definition.abstract_num_id)
         return NumberingInstance(num_el,
                                  self, self._document_part)
 
     def clear_abstract_numbering(self):
+        """
+        Remove all abstract numbering definitions.
+        """
         self._element.remove_all('w:abstractNum')
 
     def clear_numbering_instances(self):
+        """
+        Remove all numbering definitions.
+        """
         self._element.remove_all('w:num')

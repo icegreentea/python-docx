@@ -1,3 +1,4 @@
+from pyparsing import re
 import pytest
 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -27,6 +28,16 @@ class DescribeAbstractNumberingDefinition:
             assert isinstance(abnum[i], NumberingLevelDefinition)
             assert i == abnum[i].numbering_level
 
+    def it_can_set_number_formats(self, set_number_format_fixture):
+        abnum, set_value, expected_xml = set_number_format_fixture
+        abnum.set_level_number_format(set_value)
+        assert expected_xml == abnum._element.xml
+
+    def it_can_set_level_text(self, set_level_text_fixture):
+        abnum, set_value, expected_xml = set_level_text_fixture
+        abnum.set_level_text(set_value)
+        assert expected_xml == abnum._element.xml
+
     @pytest.fixture
     def simple_abstract_num_fixture(self):
         return AbstractNumberingDefinition(
@@ -39,6 +50,32 @@ class DescribeAbstractNumberingDefinition:
                    'w:lvl{w:ilvl=3})'
                    )
         ), 4, "testabnum"
+
+    @pytest.fixture(params=[
+        ("bullet", 'w:lvl{w:ilvl=0}/w:numFmt{w:val=bullet},w:lvl{w:ilvl=1}/w:numFmt{w:val=bullet}'),    # noqa
+        (["bullet", "decimal"], 'w:lvl{w:ilvl=0}/w:numFmt{w:val=bullet},w:lvl{w:ilvl=1}/w:numFmt{w:val=decimal}'),  # noqa
+    ])
+    def set_number_format_fixture(self, request):
+        set_value, tail_expected_cxml = request.param
+        abnum = AbstractNumberingDefinition(element(
+            'w:abstractNum{w:abstractNumId=1}/(w:lvl{w:ilvl=0},w:lvl{w:ilvl=1})'
+        ))
+
+        expected_xml = xml('w:abstractNum{w:abstractNumId=1}/(%s)' % tail_expected_cxml)
+        return abnum, set_value, expected_xml
+
+    @pytest.fixture(params=[
+        ("1.", 'w:lvl{w:ilvl=0}/w:lvlText{w:val=1.},w:lvl{w:ilvl=1}/w:lvlText{w:val=1.}'),    # noqa
+        (["1.", "2."], 'w:lvl{w:ilvl=0}/w:lvlText{w:val=1.},w:lvl{w:ilvl=1}/w:lvlText{w:val=2.}'),  # noqa
+    ])
+    def set_level_text_fixture(self, request):
+        set_value, tail_expected_cxml = request.param
+        abnum = AbstractNumberingDefinition(element(
+            'w:abstractNum{w:abstractNumId=1}/(w:lvl{w:ilvl=0},w:lvl{w:ilvl=1})'
+        ))
+
+        expected_xml = xml('w:abstractNum{w:abstractNumId=1}/(%s)' % tail_expected_cxml)
+        return abnum, set_value, expected_xml
 
 
 class DescribeNumberingLevelDefinition:
