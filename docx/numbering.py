@@ -24,6 +24,7 @@ class NumberingInstance:
 
         return para
 
+
 class AbstractNumberingDefinition(ElementProxy, Sequence):
     @property
     def name(self):

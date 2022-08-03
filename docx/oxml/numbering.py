@@ -165,7 +165,7 @@ class CT_AbstractNum(BaseOxmlElement):
 
     del _tag_seq
 
-    abstractNumId = RequiredAttribute("abstractNumId", ST_DecimalNumber)
+    abstractNumId = RequiredAttribute("w:abstractNumId", ST_DecimalNumber)
 
 
 class CT_Lvl(BaseOxmlElement):

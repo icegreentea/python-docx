@@ -11,7 +11,7 @@ from __future__ import (
 from docx.enum.text import WD_TAB_ALIGNMENT
 
 from ..opc.part import XmlPart
-from ..shared import Twips, lazyproperty
+from ..shared import Emu, Twips, lazyproperty
 from docx.shared import Inches
 from docx.numbering import AbstractNumberingDefinition, NumberingInstance
 
@@ -67,8 +67,10 @@ class NumberingPart(XmlPart):
         abstract_num = self.create_new_abstract_numbering_definition(name)
         abstract_num_el = abstract_num._element
         for i, lvl in enumerate(abstract_num_el.lvl_lst):
-            _tabsize_emu = Twips(tabsize * (i+2)).emu
-            _indent_emu = Twips(indent_size).emu
+            #_tabsize_twips = Emu(tabsize * (i+2)).twips
+            _tabsize_emu = Emu(tabsize * (i+2)).emu
+            #_indent_twips = Emu(tabsize).twips
+            _indent_emu = Emu(indent_size).emu
 
             lvl.get_or_add_numFmt()
             lvl.numFmt.val = "bullet"
@@ -76,8 +78,8 @@ class NumberingPart(XmlPart):
             lvl.lvlText.val = bullet_text
             pPr = lvl.get_or_add_pPr()
 
-            tabstops = pPr._add_tabs()
-            tabstops.insert_tab_in_order(_indent_emu, WD_TAB_ALIGNMENT.NUM, None)
+            #tabstops = pPr._add_tabs()
+            #tabstops.insert_tab_in_order(_indent_emu, WD_TAB_ALIGNMENT.NUM, None)
 
             indent = pPr.get_or_add_ind()
             indent.left = _tabsize_emu
@@ -90,6 +92,11 @@ class NumberingPart(XmlPart):
         return NumberingInstance(num_el,
                                  self, self._document_part)
 
+    def clear_abstract_numbering(self):
+        self._element.remove_all('w:abstractNum')
+
+    def clear_numbering_instances(self):
+        self._element.remove_all('w:num')
 
 '''
 class _NumberingDefinitions(object):
