@@ -12,6 +12,13 @@ class NumberingInstance:
     Requires handles to it's wrapped ``<w:num>`` element, it's parent ``<w:numbering>``
     part, and the overall document - since we use this object to add additional
     list items/paragraphs.
+
+    *start_override* (default 1) will automatically create an ``<w:lvlOverride>``
+    override for the first numbering level with a ``<w:startOverride>`` value
+    set to *start_override*. The default value of 1 means that each instance
+    of |NumberingInstance| referncing the same abstract numbering definition restarts
+    it's numbering count. If *start_override* is set to |None|, then none of the 
+    overrides will be present.
     """
     def __init__(self, numbering_element, numbering_part, document_part,
                  start_override=1):
@@ -21,44 +28,43 @@ class NumberingInstance:
         self._element = numbering_element
         self._doc = Document(self._doc_part.element, self._doc_part)
         if start_override is not None:
-            override = self._element.add_lvlOverride(0)
-            override.add_startOverride(start_override)
+            override = self.add_level_override(0)
+            override.start_override = start_override
 
     @property
-    def start_override(self):
-        lvloverride = self._element.lvlOverride
-        if lvloverride is None:
-            return None
-        startOverride = lvloverride.startOverride
-        if startOverride is None:
-            return None
-        return startOverride.val
-
-    @start_override.setter
-    def start_override(self, value):
-        lvloverride = self._element.get_or_add_lvlOverride()
-        if value is None:
-            lvloverride._remove_startOverride()
-        else:
-            startOverride = lvloverride.get_or_add_startOverride()
-            startOverride.val = value
+    def numbering_id(self):
+        return self._element.numId
 
     @property
     def level_overrides(self):
-        return [NumberingLevelDefinition(x, self) for x in self._element.lvl_lst]
+        """
+        Sequence of defined |NumberingLevelOverride| objects.
+        """
+        return [NumberLevelOverride(x, self) for x in self._element.lvlOverride_lst]
 
     def get_level_override_by_ilvl(self, ilvl):
-        for x in self._element.lvl_lst:
+        """
+        Return |NumberingLevelOverride| with matching numbering level of *ilvl*.
+        If no override exists with matching ilvl, returns |None|.
+        """
+        for x in self._element.lvlOverride_lst:
             if x.ilvl == ilvl:
-                return NumberingLevelDefinition(x, self)
+                return NumberLevelOverride(x, self)
         return None
 
     def add_level_override(self, ilvl):
+        """
+        Return (create if needed) a |NumberingLevelOverride| with numbering level of
+        *ilvl*.
+        """
         existing = self.get_level_override_by_ilvl(ilvl)
         if existing:
             return existing
         else:
-            lvlOverride
+            lvlOverride_elm = self._element.add_lvlOverride(ilvl)
+            numlvloverride = NumberLevelOverride(lvlOverride_elm, self)
+            numlvloverride.start_override = 1
+            return numlvloverride
 
     def add_paragraph(self, indent_level, text=''):
         """
@@ -82,8 +88,6 @@ class NumberingInstance:
 
     def _get_indentation(self, indent_level):
         pass
-
-
 
 
 class AbstractNumberingDefinition(ElementProxy, Sequence):
@@ -271,6 +275,44 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
         for i in range(1, 9):
             _store.append(_store[-1] + "%{}.".format(i+1))
         return "decimal", _store
+
+
+class NumberLevelOverride(ElementProxy):
+    """
+    Wrapper around ``<w:lvlOverride>`` element.
+    """
+    def __init__(self, element, parent=None):
+        super().__init__(element, parent)
+
+    @property
+    def numbering_level(self):
+        return self._element.ilvl
+
+    @numbering_level.setter
+    def numbering_level(self, value):
+        self._element.ilvl = value
+
+    @property
+    def start_override(self):
+        startOverride = self._element.startOverride
+        if startOverride is None:
+            return None
+        return startOverride.val
+
+    @start_override.setter
+    def start_override(self, value):
+        if value is None:
+            self._element._remove_startOverride()
+        else:
+            startOverride = self._element.get_or_add_startOverride()
+            startOverride.val = value
+
+    @property
+    def override_level_definition(self):
+        lvl = self._element.lvl
+        if lvl is None:
+            return None
+        return NumberingLevelDefinition(lvl, self)
 
 
 class NumberingLevelDefinition(ElementProxy):

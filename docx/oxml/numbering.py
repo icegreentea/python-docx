@@ -52,7 +52,7 @@ class CT_NumLvl(BaseOxmlElement):
     definition to override with settings it contains.
     """
     startOverride = ZeroOrOne('w:startOverride', successors=('w:lvl',))
-    lvl = ZeroOrMore('w:lvl')
+    lvl = ZeroOrOne('w:lvl')
 
     ilvl = RequiredAttribute('w:ilvl', ST_DecimalNumber)
 

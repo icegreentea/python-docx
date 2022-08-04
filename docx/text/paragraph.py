@@ -149,3 +149,73 @@ class Paragraph(RunItemContainer):
         """
         p = self._p.add_p_before()
         return Paragraph(p, self._parent)
+
+    @property
+    def numbering_instance_id(self):
+        """
+        Returns the referenced numbering instance id if set. Otherwise returns |None|.
+        """
+        pPr = self._element.pPr
+        if pPr is None:
+            return None
+        numPr = pPr.numPr
+        if numPr is None:
+            return None
+        numId = numPr.numId
+        if numId is None:
+            return None
+        return numId.val
+
+    @numbering_instance_id.setter
+    def numbering_instance_id(self, val):
+        from docx.numbering import NumberingInstance
+        if isinstance(val, NumberingInstance):
+            pPr = self._element.get_or_add_pPr()
+            numPr = pPr.get_or_add_numPr()
+            numId = numPr.get_or_add_numId()
+            numId.val = val.numbering_id
+        elif isinstance(val, int):
+            pPr = self._element.get_or_add_pPr()
+            numPr = pPr.get_or_add_numPr()
+            numId = numPr.get_or_add_numId()
+            numId.val = val
+        elif val is None:
+            pPr = self._element.pPr
+            if pPr is None:
+                return
+            numPr = pPr.numPr
+            if numPr is None:
+                return
+            numPr._remove_numId()
+
+    @property
+    def numbering_level(self):
+        """
+        Returns the referenced numbering level if set. Otherwise returns |None|.
+        """
+        pPr = self._element.pPr
+        if pPr is None:
+            return None
+        numPr = pPr.numPr
+        if numPr is None:
+            return None
+        ilvl = numPr.ilvl
+        if ilvl is None:
+            return None
+        return ilvl.val
+
+    @numbering_level.setter
+    def numbering_level(self, value):
+        if isinstance(value, int):
+            pPr = self._element.get_or_add_pPr()
+            numPr = pPr.get_or_add_numPr()
+            ilvl = numPr.get_or_add_ilvl()
+            ilvl.val = value
+        elif value is None:
+            pPr = self._element.pPr
+            if pPr is None:
+                return
+            numPr = pPr.numPr
+            if numPr is None:
+                return
+            numPr._remove_ilvl()

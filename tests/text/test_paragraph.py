@@ -122,7 +122,55 @@ class DescribeParagraph(object):
         expected_xml = xml('w:p{r:d=d}/w:hyperlink{r:id=rId1}/w:r/w:t"test"')
         assert p._element.xml == expected_xml
 
+    def it_knows_its_numbering_instance_id(self, get_numbering_instance_id_fixture):
+        p, expected_numbering_instance_id = get_numbering_instance_id_fixture
+        assert expected_numbering_instance_id == p.numbering_instance_id
+
+    def it_knows_its_numbering_level(self, get_numbering_level_fixture):
+        p, expected_numbering_level = get_numbering_level_fixture
+        assert expected_numbering_level == p.numbering_level
+
+    def it_can_set_its_numbering_instance_id(self):
+        p = Paragraph(element('w:p'), None)
+        p.numbering_instance_id = 1
+        expected_xml = xml('w:p/w:pPr/w:numPr/w:numId{w:val=1}')
+        assert expected_xml == p._element.xml
+
+        p.numbering_instance_id = None
+        expected_xml = xml('w:p/w:pPr/w:numPr')
+        assert expected_xml == p._element.xml
+
+    def it_can_set_its_numbering_level(self):
+        p = Paragraph(element('w:p'), None)
+        p.numbering_level = 1
+        expected_xml = xml('w:p/w:pPr/w:numPr/w:ilvl{w:val=1}')
+        assert expected_xml == p._element.xml
+
+        p.numbering_level = None
+        expected_xml = xml('w:p/w:pPr/w:numPr')
+        assert expected_xml == p._element.xml
+
     # fixtures -------------------------------------------------------
+
+    @pytest.fixture(params=[
+        ('w:p', None),
+        ('w:p/w:pPr', None),
+        ('w:p/w:pPr/w:numPr', None),
+        ('w:p/w:pPr/w:numPr/w:numId{w:val=1}', 1)
+    ])
+    def get_numbering_instance_id_fixture(self, request):
+        p_cxml, expected = request.param
+        return Paragraph(element(p_cxml), None), expected
+
+    @pytest.fixture(params=[
+        ('w:p', None),
+        ('w:p/w:pPr', None),
+        ('w:p/w:pPr/w:numPr', None),
+        ('w:p/w:pPr/w:numPr/w:ilvl{w:val=1}', 1)
+    ])
+    def get_numbering_level_fixture(self, request):
+        p_cxml, expected = request.param
+        return Paragraph(element(p_cxml), None), expected
 
     @pytest.fixture(params=[
         ('w:p', None,     None,     'w:p/w:r'),

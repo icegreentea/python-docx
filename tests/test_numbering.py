@@ -10,7 +10,14 @@ from .unitutil.cxml import element, xml
 
 
 class DescribeNumberingInstance:
-    pass
+    def it_knows_its_numbering_instance_id(self):
+        pass
+
+    def it_can_add_list_paragraph(self):
+        pass
+
+    def it_can_add_unlabeled_paragraph(self):
+        pass
 
 
 class DescribeAbstractNumberingDefinition:
