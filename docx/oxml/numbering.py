@@ -52,6 +52,8 @@ class CT_NumLvl(BaseOxmlElement):
     definition to override with settings it contains.
     """
     startOverride = ZeroOrOne('w:startOverride', successors=('w:lvl',))
+    lvl = ZeroOrMore('w:lvl')
+
     ilvl = RequiredAttribute('w:ilvl', ST_DecimalNumber)
 
     def add_startOverride(self, val):
@@ -168,6 +170,11 @@ class CT_AbstractNum(BaseOxmlElement):
 
 
 class CT_Lvl(BaseOxmlElement):
+    """
+    ``<w:lvl>`` element. Defines both Numbering Level Definition in an
+    Abstract Numbering Definition and a Numbering Level Override Definition
+    in an Numbering Instance.
+    """
     _tag_seq = (
         'w:start', 'w:numFmt', 'w:lvlRestart', 'w:pStyle', 'w:isLgl', 'w:suff',
         'w:lvlText', 'w:lvlPicBulletId', 'w:legacy', 'w:lvlJc', 'w:pPr', 'w:rPr'

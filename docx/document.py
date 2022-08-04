@@ -288,7 +288,7 @@ class Document(ElementProxy):
         Create and return |AbstractNumberingDefinition| instance with next free
         ``abstractNumId`` that implements a simple bullet (unordered) list style.
 
-        *bullet_text* is the bullet symbol to be used. Pass in length 9 sequence of 
+        *bullet_text* is the bullet symbol to be used. Pass in length 9 sequence of
         characters to set different bullet symbols for each level. Alternatively,
         you can iterate over the returned object and set ``lvl.numbering_level_text``
         for each level directly.
@@ -296,7 +296,7 @@ class Document(ElementProxy):
         See ``create_new_abstract_numbering_definition`` for other parameters.
         """
         abnum = self.create_new_abstract_numbering_definition(
-            name, hanging_indent=hanging_indent, leading_indent=leading_indent, 
+            name, hanging_indent=hanging_indent, leading_indent=leading_indent,
             tabsize=tabsize)
         abnum.set_level_number_format("bullet").set_level_text(bullet_text)
         return abnum

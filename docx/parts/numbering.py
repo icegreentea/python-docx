@@ -9,7 +9,7 @@ from __future__ import (
 )
 
 from ..opc.part import XmlPart
-from ..shared import Emu, lazyproperty
+from ..shared import lazyproperty
 from docx.shared import Inches
 from docx.numbering import AbstractNumberingDefinition, NumberingInstance
 
@@ -81,12 +81,12 @@ class NumberingPart(XmlPart):
         abstractNum_el.abstractNumId = self._element.next_abstract_num_id
         return AbstractNumberingDefinition.\
             initialize_element(abstractNum_el, name=name, hanging_indent=hanging_indent,
-                               leading_indent=leading_indent, tabsize=tabsize, 
+                               leading_indent=leading_indent, tabsize=tabsize,
                                levels=levels)
 
     def create_new_numbering_instance(self, abstract_numbering_definition):
         """
-        Create and return a new |NumberingInstance| referencing 
+        Create and return a new |NumberingInstance| referencing
         *abstract_numbering_definition*.
         """
         num_el = self._element.add_num(abstract_numbering_definition.abstract_num_id)

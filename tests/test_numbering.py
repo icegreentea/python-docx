@@ -1,4 +1,3 @@
-from pyparsing import re
 import pytest
 
 from docx.enum.text import WD_ALIGN_PARAGRAPH

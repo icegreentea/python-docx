@@ -1,8 +1,8 @@
-from sre_constants import AT_BOUNDARY
 import pytest
 import os
 
 import docx
+from docx.numbering import AbstractNumberingDefinition
 
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 OUTPUT_DIR = os.path.join(CURDIR, "output")
@@ -25,6 +25,32 @@ class ManuallyCheckNumbering:
         numist.add_paragraph(0, "b2")
         numist.add_paragraph(1, "b3")
         save_document(doc, "bullet-list.docx")
+
+    @pytest.mark.manual
+    def it_can_create_alternating_bullets(self):
+        doc = docx.Document()
+        abnum = doc.create_new_bullet_definition()
+        numFmt, lvlTexts = AbstractNumberingDefinition.alternate_bullet_definition()
+        abnum.set_level_text(lvlTexts)
+        numist = doc.create_new_numbering_instance(abnum)
+
+        for i in range(9):
+            numist.add_paragraph(i, "p1")
+        save_document(doc, "alternating-bullet-list.docx")
+
+    @pytest.mark.manual
+    def it_can_create_fully_defined_decimals(self):
+        doc = docx.Document()
+        abnum = doc.create_new_bullet_definition()
+        numFmt, lvlTexts = \
+            AbstractNumberingDefinition.fully_defined_decimal_definition()
+        abnum.set_level_number_format(numFmt)
+        abnum.set_level_text(lvlTexts)
+        numist = doc.create_new_numbering_instance(abnum)
+
+        for i in range(9):
+            numist.add_paragraph(i, "p1")
+        save_document(doc, "fully-defined-decimal.docx")
 
     @pytest.mark.manual
     def it_can_create_decimal(self):

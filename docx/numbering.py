@@ -4,6 +4,15 @@ from docx.shared import ElementProxy, Inches, Emu
 
 
 class NumberingInstance:
+    """
+    Wrapper/proxy around ``<w:num>`` element. Represents an instance of a numbering
+    or list. In general, you will need a new |NumberingInstance| for each new list that
+    you have to restart the counter.
+
+    Requires handles to it's wrapped ``<w:num>`` element, it's parent ``<w:numbering>``
+    part, and the overall document - since we use this object to add additional
+    list items/paragraphs.
+    """
     def __init__(self, numbering_element, numbering_part, document_part,
                  start_override=1):
         from docx.document import Document
@@ -15,7 +24,47 @@ class NumberingInstance:
             override = self._element.add_lvlOverride(0)
             override.add_startOverride(start_override)
 
+    @property
+    def start_override(self):
+        lvloverride = self._element.lvlOverride
+        if lvloverride is None:
+            return None
+        startOverride = lvloverride.startOverride
+        if startOverride is None:
+            return None
+        return startOverride.val
+
+    @start_override.setter
+    def start_override(self, value):
+        lvloverride = self._element.get_or_add_lvlOverride()
+        if value is None:
+            lvloverride._remove_startOverride()
+        else:
+            startOverride = lvloverride.get_or_add_startOverride()
+            startOverride.val = value
+
+    @property
+    def level_overrides(self):
+        return [NumberingLevelDefinition(x, self) for x in self._element.lvl_lst]
+
+    def get_level_override_by_ilvl(self, ilvl):
+        for x in self._element.lvl_lst:
+            if x.ilvl == ilvl:
+                return NumberingLevelDefinition(x, self)
+        return None
+
+    def add_level_override(self, ilvl):
+        existing = self.get_level_override_by_ilvl(ilvl)
+        if existing:
+            return existing
+        else:
+            lvlOverride
+
     def add_paragraph(self, indent_level, text=''):
+        """
+        Create and return a new |Paragraph|. *indent_level* is zero-indexed value
+        representing the level of indentation.
+        """
         para = self._doc.add_paragraph(text)
         p_elm = para._element
         pPr = p_elm.get_or_add_pPr()
@@ -28,10 +77,18 @@ class NumberingInstance:
 
         return para
 
+    def add_unlabeled_paragraph(self, indent_level, text=''):
+        pass
+
+    def _get_indentation(self, indent_level):
+        pass
+
+
+
 
 class AbstractNumberingDefinition(ElementProxy, Sequence):
     """
-    Wrapper/proxy around ``<w:abstractNum>`` element. 
+    Wrapper/proxy around ``<w:abstractNum>`` element.
     This element describes an "abstract" or "base" numbering format.
     The element consists of a number of |NumberingLevelDefinition|, each of which
     defines the formatting at a particularing numbering/indentation level.
@@ -82,7 +139,7 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
     def set_level_text(self, numbering_level_text):
         """
         Set the ``numbering_level_text`` property (``<w:lvlText)`` element) of
-        child |NumberingLevelDefinition|. If *numbering_level_text* is a string, 
+        child |NumberingLevelDefinition|. If *numbering_level_text* is a string,
         then the same value will be applied to all child elements. Otherwise, will
         iterate over *numbering_level_text* and apply each sub-element to its matching
         child element in sequence.
@@ -98,7 +155,7 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
     def set_level_start(self, start):
         """
         Set the ``start`` property (``<w:start)`` element) of
-        child |NumberingLevelDefinition|. If *start* is a int, 
+        child |NumberingLevelDefinition|. If *start* is a int,
         then the same value will be applied to all child elements. Otherwise, will
         iterate over *start* and apply each sub-element to its matching
         child element in sequence.
@@ -148,7 +205,72 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
             indent = pPr.get_or_add_ind()
             indent.left = Emu(leading_indent).emu + i * Emu(tabsize).emu
             indent.hanging = Emu(hanging_indent).emu
+            start = lvl.get_or_add_start()
+            start.val = 1
         return cls(abstractNum_elem)
+
+    @staticmethod
+    def alternate_bullet_definition():
+        """
+        Returns numbering format and numbering level text (as tuple) suitable for bullet
+        list that alternates between solid dot, hollow dot, and square bullets.
+        """
+        return "bullet", [
+            '\u2022', '\u25CB', '\u25aa',
+            '\u2022', '\u25CB', '\u25aa',
+            '\u2022', '\u25CB', '\u25aa',
+        ]
+
+    @staticmethod
+    def simple_bullet_definition():
+        """
+        Returns numbering format and numbering level text (as tuple) suitable for 
+        bullet list of solid dots.
+        """
+        return "bullet", '\u2022'
+
+    @staticmethod
+    def simple_decimal_definition():
+        """
+        Returns numbering format and numbering level text (as tuple) suitable for
+        a decimal list where each level is labelled with "X.". For example::
+
+            1.
+            2.
+                1.
+                2.
+        """
+        return "decimal", ["%{}.".format(x+1) for x in range(9)]
+
+    @staticmethod
+    def simple_bracket_decimal_definition():
+        """
+        Returns numbering format and numbering level text (as tuple) suitable for
+        a decimal list where each level is labelled with "X)". For example::
+
+            1)
+            2)
+                1)
+                2)
+        """
+        return "decimal", ["%{})".format(x+1) for x in range(9)]
+
+    @staticmethod
+    def fully_defined_decimal_definition():
+        """
+        Returns numbering format and numbering level text (as tuple) suitable for
+        a decimal list where each level is fully defined - including parent level. 
+        For example::
+
+            1.
+            2.
+                2.1.
+                2.2
+        """
+        _store = ["%1."]
+        for i in range(1, 9):
+            _store.append(_store[-1] + "%{}.".format(i+1))
+        return "decimal", _store
 
 
 class NumberingLevelDefinition(ElementProxy):
@@ -208,20 +330,20 @@ class NumberingLevelDefinition(ElementProxy):
         should restart. One indexed.
 
         When a numbering level of *restart_numbering_level* occurs in this document,
-        this numbering level will reset to it's ``start`` value on next occurence. 
+        this numbering level will reset to it's ``start`` value on next occurence.
         *restart_numbering_level* should be higher than this numbering level.
 
-        For example, assuming that on the second numbering level, we set 
+        For example, assuming that on the second numbering level, we set
         *restart_numbering_level* to 3. Then we would expect this type of behavior::
 
             1.
-            2. 
+            2.
                 1.
                 2.
                     1.
                 1. (reset due to 3rd level appearing)
 
-        When unset (the default), this level will reset whenever a LOWER numbering 
+        When unset (the default), this level will reset whenever a LOWER numbering
         level occurs (normal expected behavior)::
 
                 1.
@@ -246,7 +368,7 @@ class NumberingLevelDefinition(ElementProxy):
     @property
     def numbering_level_text(self):
         """
-        Numbering Level Text. Wrapper around ``<w:lvlText>`` element. 
+        Numbering Level Text. Wrapper around ``<w:lvlText>`` element.
         Defines the text content used in numbering. The "1." or specific bullet
         symbol for example.
 
