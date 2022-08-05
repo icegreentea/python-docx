@@ -4,7 +4,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.numbering import (NumberingLevelDefinition,
                             AbstractNumberingDefinition,
-                            NumberingInstance)
+                            NumberingInstance,
+                            NumberLevelOverride)
 
 from .unitutil.cxml import element, xml
 
@@ -18,6 +19,38 @@ class DescribeNumberingInstance:
 
     def it_can_add_unlabeled_paragraph(self):
         pass
+
+
+class DescribeNumberLevelOverride:
+    def it_knows_and_can_set_numbering_level(self):
+        nlo = NumberLevelOverride(element('w:lvlOverride{w:ilvl=2}'), None)
+        assert 2 == nlo.numbering_level
+        nlo.numbering_level = 0
+        assert 0 == nlo.numbering_level
+        expected_xml = xml('w:lvlOverride{w:ilvl=0}')
+        assert expected_xml == nlo._element.xml
+
+    def it_knows_and_can_set_start_override(self):
+        elm = element('w:lvlOverride{w:ilvl=0}/w:startOverride{w:val=1}')
+        nlo = NumberLevelOverride(elm, None)
+        assert 1 == nlo.start_override
+        nlo.start_override = 2
+        assert 2 == nlo.start_override
+        expected_xml = xml('w:lvlOverride{w:ilvl=0}/w:startOverride{w:val=2}')
+        assert expected_xml == nlo._element.xml
+
+    def it_contains_override_level_defintion(self):
+        elm = element('w:lvlOverride{w:ilvl=0}')
+        nlo = NumberLevelOverride(elm, None)
+        assert nlo.override_level_definition is None
+        ret = nlo.create_override_level_definition()
+        assert isinstance(ret, NumberingLevelDefinition)
+        expected_xml = xml('w:lvlOverride{w:ilvl=0}/w:lvl')
+        assert expected_xml == nlo._element.xml
+        nlo.remove_override_level_definition()
+        assert nlo.override_level_definition is None
+        expected_xml = xml('w:lvlOverride{w:ilvl=0}')
+        assert expected_xml == nlo._element.xml
 
 
 class DescribeAbstractNumberingDefinition:

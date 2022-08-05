@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from copy import deepcopy
+
 from docx.shared import ElementProxy, Inches, Emu
 
 
@@ -313,6 +314,13 @@ class NumberLevelOverride(ElementProxy):
         if lvl is None:
             return None
         return NumberingLevelDefinition(lvl, self)
+
+    def create_override_level_definition(self):
+        lvl = self._element.get_or_add_lvl()
+        return NumberingLevelDefinition(lvl, self)
+
+    def remove_override_level_definition(self):
+        self._element._remove_lvl()
 
 
 class NumberingLevelDefinition(ElementProxy):
