@@ -7,9 +7,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from docx.blkcntnr import BlockItemContainer
 from docx.enum.section import WD_SECTION
 from docx.enum.text import WD_BREAK
+from docx.numbering import NumberingInstance
 from docx.section import Section, Sections
 from docx.shared import ElementProxy, Emu, Inches
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+
+from typing import TYPE_CHECKING, Optional, List
+
+if TYPE_CHECKING:
+    from docx.numbering import AbstractNumberingDefinition, NumberingInstance
+    from docx.text.paragraph import Paragraph
 
 
 class Document(ElementProxy):
@@ -26,7 +33,7 @@ class Document(ElementProxy):
         self._part = part
         self.__body = None
 
-    def add_heading(self, text="", level=1):
+    def add_heading(self, text="", level=1) -> 'Paragraph':
         """Return a heading paragraph newly added to the end of the document.
 
         The heading paragraph will contain *text* and have its paragraph style
@@ -39,13 +46,13 @@ class Document(ElementProxy):
         style = "Title" if level == 0 else "Heading %d" % level
         return self.add_paragraph(text, style)
 
-    def add_page_break(self):
+    def add_page_break(self) -> 'Paragraph':
         """Return newly |Paragraph| object containing only a page break."""
         paragraph = self.add_paragraph()
         paragraph.add_run().add_break(WD_BREAK.PAGE)
         return paragraph
 
-    def add_paragraph(self, text='', style=None):
+    def add_paragraph(self, text='', style=None, numbering_instance=None, indent_level=None) -> 'Paragraph':
         """
         Return a paragraph newly added to the end of the document, populated
         with *text* and having paragraph style *style*. *text* can contain
@@ -54,7 +61,12 @@ class Document(ElementProxy):
         return (``\\r``) characters, each of which is converted to a line
         break.
         """
-        return self._body.add_paragraph(text, style)
+        if numbering_instance is not None:
+            if indent_level is None:
+                raise ValueError("numbering_level must be defined if numbering_instance is provided")
+            return numbering_instance.add_paragraph(indent_level, text, style=style)
+        else:
+            return self._body.add_paragraph(text, style)
 
     def add_picture(self, image_path_or_stream, width=None, height=None, shape_id=None):
         """
@@ -240,14 +252,22 @@ class Document(ElementProxy):
         return self._part.next_shape_id
 
     @property
-    def abstract_numbering_definitions(self):
+    def abstract_numbering_definitions(self) -> List['AbstractNumberingDefinition']:
         """
         Sequence of |AbstractNumberingDefinition| contained in document.
         """
         return self._part.numbering_part.abstract_numbering_definitions
 
+    def get_abstract_numbering_definition(self, ab_num) -> Optional['AbstractNumberingDefinition']:
+        if isinstance(ab_num, int):
+            matching = [x for x in self.abstract_numbering_definitions 
+                if x.abstract_num_id == ab_num]
+            if len(matching) == 0:
+                return None
+            return matching[0]
+
     @property
-    def numbering_instances(self):
+    def numbering_instances(self) -> List['NumberingInstance']:
         """
         Sequence of |NumberingInstance| contained in the document.
         """
@@ -257,7 +277,7 @@ class Document(ElementProxy):
                                                  name=None,
                                                  hanging_indent=Inches(0.25),
                                                  leading_indent=Inches(0.5),
-                                                 tabsize=Inches(0.25)):
+                                                 tabsize=Inches(0.25)) -> 'AbstractNumberingDefinition':
         """
         Create and return |AbstractNumberingDefinition| instance with next
         free ``abstractNumId``.
@@ -283,7 +303,7 @@ class Document(ElementProxy):
                                      hanging_indent=Inches(0.25),
                                      leading_indent=Inches(0.5),
                                      tabsize=Inches(0.25),
-                                     bullet_text="\u2022"):
+                                     bullet_text="\u2022") -> 'AbstractNumberingDefinition':
         """
         Create and return |AbstractNumberingDefinition| instance with next free
         ``abstractNumId`` that implements a simple bullet (unordered) list style.
@@ -305,7 +325,7 @@ class Document(ElementProxy):
                                              name=None,
                                              hanging_indent=Inches(0.25),
                                              leading_indent=Inches(0.5),
-                                             tabsize=Inches(0.25)):
+                                             tabsize=Inches(0.25)) -> 'AbstractNumberingDefinition':
         """
         Create and return |AbstractNumberingDefinition| instance with next free
         ``abstractNumId`` that implements a simple decimal (ordered) list style.
@@ -320,7 +340,7 @@ class Document(ElementProxy):
             lvl.numbering_level_text = "%{}.".format(lvl.numbering_level + 1)
         return abnum
 
-    def create_new_numbering_instance(self, abstract_numbering_definition):
+    def create_new_numbering_instance(self, abstract_numbering_definition) -> 'NumberingInstance':
         return self._part.numbering_part.\
             create_new_numbering_instance(abstract_numbering_definition)
 

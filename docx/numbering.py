@@ -1,8 +1,9 @@
 from collections.abc import Sequence
 from copy import deepcopy
 
-from docx.shared import ElementProxy, Inches, Emu
+from docx.shared import ElementProxy, Inches, Emu, lazyproperty
 
+from typing import Union, List, Iterator
 
 class NumberingInstance:
     """
@@ -23,18 +24,26 @@ class NumberingInstance:
     """
     def __init__(self, numbering_element, numbering_part, document_part,
                  start_override=1):
-        from docx.document import Document
         self._numbering_part = numbering_part
         self._doc_part = document_part
         self._element = numbering_element
-        self._doc = Document(self._doc_part.element, self._doc_part)
+        #self._doc = Document(self._doc_part.element, self._doc_part)
         if start_override is not None:
             override = self.add_level_override(0)
             override.start_override = start_override
 
+    @lazyproperty
+    def _doc(self):
+        from docx.document import Document
+        return Document(self._doc_part.element, self._doc_part)
+
     @property
     def numbering_id(self):
         return self._element.numId
+
+    @property
+    def abstract_numbering_id(self):
+        return self._element.abstractNum.val
 
     @property
     def level_overrides(self):
@@ -67,12 +76,12 @@ class NumberingInstance:
             numlvloverride.start_override = 1
             return numlvloverride
 
-    def add_paragraph(self, indent_level, text=''):
+    def add_paragraph(self, indent_level, text='', style=None):
         """
         Create and return a new |Paragraph|. *indent_level* is zero-indexed value
         representing the level of indentation.
         """
-        para = self._doc.add_paragraph(text)
+        para = self._doc.add_paragraph(text, style=style)
         p_elm = para._element
         pPr = p_elm.get_or_add_pPr()
         numPr = pPr.get_or_add_numPr()
@@ -83,12 +92,6 @@ class NumberingInstance:
         numId.val = self._element.numId
 
         return para
-
-    def add_unlabeled_paragraph(self, indent_level, text=''):
-        pass
-
-    def _get_indentation(self, indent_level):
-        pass
 
 
 class AbstractNumberingDefinition(ElementProxy, Sequence):
@@ -110,7 +113,7 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
     def abstract_num_id(self):
         return self._element.abstractNumId
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Union["NumberingLevelDefinition", List["NumberingLevelDefinition"]]:
         if isinstance(key, slice):
             return [
                 NumberingLevelDefinition(lvl, self._element)
@@ -118,7 +121,7 @@ class AbstractNumberingDefinition(ElementProxy, Sequence):
             ]
         return NumberingLevelDefinition(self._element.lvl_lst[key], self._element)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator["NumberingLevelDefinition"]:
         for lvl in self._element.lvl_lst:
             yield NumberingLevelDefinition(lvl, self._element)
 

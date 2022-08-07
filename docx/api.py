@@ -13,8 +13,13 @@ import os
 from docx.opc.constants import CONTENT_TYPE as CT
 from docx.package import Package
 
+from typing import TYPE_CHECKING
 
-def Document(docx=None):
+if TYPE_CHECKING:
+    from docx.document import Document as _Document
+
+
+def Document(docx=None) -> "_Document":
     """
     Return a |Document| object loaded from *docx*, where *docx* can be
     either a path to a ``.docx`` file (a string) or a file-like object. If

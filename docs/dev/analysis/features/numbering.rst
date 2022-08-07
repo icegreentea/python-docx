@@ -4,6 +4,11 @@ Numbering Part
 
 ... having to do with numbering sequences for ordered lists, etc. ...
 
+Numbered Headings
+-----------------
+
+
+
 
 Schema excerpt
 --------------

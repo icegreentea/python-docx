@@ -182,6 +182,7 @@ class CT_Lvl(BaseOxmlElement):
     start = ZeroOrOne("w:start", successors=_tag_seq[1:])
     numFmt = ZeroOrOne("w:numFmt", successors=_tag_seq[2:])
     lvlRestart = ZeroOrOne("w:lvlRestart", successors=_tag_seq[3:])
+    pStyle = ZeroOrOne('w:pStyle', successors=_tag_seq[4:])
     lvlText = ZeroOrOne("w:lvlText", successors=_tag_seq[7:])
     lvlJc = ZeroOrOne("w:lvlJc", successors=_tag_seq[10:])
     pPr = ZeroOrOne("w:pPr", successors=_tag_seq[11:])

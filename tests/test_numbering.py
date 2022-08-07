@@ -2,6 +2,7 @@ import pytest
 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+from docx.api import Document as OpenDocument
 from docx.numbering import (NumberingLevelDefinition,
                             AbstractNumberingDefinition,
                             NumberingInstance,
@@ -11,14 +12,30 @@ from .unitutil.cxml import element, xml
 
 
 class DescribeNumberingInstance:
+    def it_sets_start_override_by_default(self):
+        num_elm = element('w:num{w:numId=10}')
+        num = NumberingInstance(num_elm, None, None)
+        assert 1 == len(num.level_overrides)
+        assert 0 == num.level_overrides[0].numbering_level
+        assert 1 == num.level_overrides[0].start_override
+
     def it_knows_its_numbering_instance_id(self):
-        pass
+        num_elm = element('w:num{w:numId=10}')
+        num = NumberingInstance(num_elm, None, None)
+        assert 10 == num.numbering_id 
 
     def it_can_add_list_paragraph(self):
-        pass
+        doc = OpenDocument()
+        doc._element = element('w:document')
+        num_elm = element('w:num{w:numId=10}')
+        num = NumberingInstance(num_elm, None, doc._part)
+        p = num.add_paragraph(0, "para")
 
-    def it_can_add_unlabeled_paragraph(self):
-        pass
+        assert 10 == p.numbering_instance_id
+        assert 0 == p.numbering_level
+        assert "para" == p.text
+
+    
 
 
 class DescribeNumberLevelOverride:
