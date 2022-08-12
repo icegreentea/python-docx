@@ -35,7 +35,21 @@ class DescribeNumberingInstance:
         assert 0 == p.numbering_level
         assert "para" == p.text
 
-    
+    def it_can_add_level_override_and_get_level_override(self):
+        doc = OpenDocument()
+        doc._element = element('w:document')
+        num_elm = element('w:num{w:numId=0}')
+        num = NumberingInstance(num_elm, None, doc._part)
+        assert 1 == len(num.level_overrides)
+
+        num_override = num.add_level_override(1)
+        assert 2 == len(num.level_overrides)
+        assert isinstance(num_override, NumberLevelOverride)
+        ret_num_override = num.get_level_override_by_ilvl(1)
+        assert num_override == ret_num_override
+
+        expected_xml = xml('w:lvlOverride{w:ilvl=1}')
+        assert expected_xml == num_override._element.xml
 
 
 class DescribeNumberLevelOverride:

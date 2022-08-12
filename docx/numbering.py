@@ -73,7 +73,6 @@ class NumberingInstance:
         else:
             lvlOverride_elm = self._element.add_lvlOverride(ilvl)
             numlvloverride = NumberLevelOverride(lvlOverride_elm, self)
-            numlvloverride.start_override = 1
             return numlvloverride
 
     def add_paragraph(self, indent_level, text='', style=None):
